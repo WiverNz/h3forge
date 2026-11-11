@@ -1,0 +1,89 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      // Frontend production build + `tauri build --debug`; the debug binary
+      // lands in `${workspaceFolder}/target/debug/H3Forge.exe`.
+      "label": "npm: desktop:build (debug)",
+      "type": "npm",
+      "script": "desktop:build:debug",
+      "path": "web/",
+      "group": "build",
+      "problemMatcher": ["$rustc"],
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      // Same portable build and artifact verification as the GitHub pipeline.
+      // Outputs `.local/release/H3Forge.exe` and its SHA-256 checksum.
+      "label": "npm: desktop:build (release)",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy", "Bypass",
+        "-Command",
+        "$ErrorActionPreference = 'Stop'; & ./scripts/build-portable.ps1; node scripts/verify-portable.cjs; exit $LASTEXITCODE"
+      ],
+      "options": { "cwd": "${workspaceFolder}" },
+      "group": "build",
+      "problemMatcher": ["$rustc"],
+      "presentation": { "reveal": "silent", "clear": true }
+    },
+    {
+      // Long-running `tauri dev` session (Vite dev server + cargo dev build).
+      // The background matcher signals "ready" once the dev-profile build
+      // finishes so launch configurations can attach to the app.
+      "label": "npm: desktop:dev (tauri dev)",
+      "type": "npm",
+      "script": "desktop:dev",
+      "path": "web/",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "rust",
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": {
+          "regexp": "^error(\\[[A-Z0-9]+\\])?: (.*)$",
+          "message": 2
+        },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Compiling h3forge|Finished `dev` profile|error",
+          "endsPattern": "Finished `dev` profile|error(\\[[A-Z0-9]+\\])?:"
+        }
+      },
+      "presentation": { "reveal": "always", "clear": true }
+    },
+    {
+      // Removes the whole workspace `target/` directory (debug + release
+      // objects, incremental caches, rust-analyzer flycheck output). The next
+      // build recompiles every dependency from scratch.
+      "label": "cargo: clean (debug + release)",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["clean"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "clear": true }
+    },
+    {
+      // Removes only `target/debug` (dev-profile objects; the largest share).
+      "label": "cargo: clean (debug only)",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["clean", "--profile", "dev"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "clear": true }
+    },
+    {
+      // Removes only `target/release` (optimized build objects and bundles).
+      "label": "cargo: clean (release only)",
+      "type": "shell",
+      "command": "cargo",
+      "args": ["clean", "--release"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "clear": true }
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  // Debug configurations for the H3Forge workspace.
+  // Requires the CodeLLDB and rust-analyzer extensions (see extensions.json).
+  "version": "0.2.0",
+  "configurations": [
+    {
+      // Self-contained F5: builds the frontend + a debug Rust binary
+      // (`npm run desktop:build`, i.e. `tauri build --debug`), then launches
+      // it under the debugger. The exe lands in the workspace `target/debug`.
+      "type": "lldb",
+      "request": "launch",
+      "name": "Launch H3Forge (debug build)",
+      // GUI app: bypass shell launch commands; logs go to Debug Console.
+      "terminal": "console",
+      "preLaunchTask": "npm: desktop:build (debug)",
+      "program": "${workspaceFolder}/target/debug/H3Forge.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      // Don't stop on the Windows loader's initial breakpoint exception
+      // (0x80000003 / STATUS_BREAKPOINT) raised in ntdll before main; the
+      // debugger just continues past it.
+      "postRunCommands": ["process handle -p false -s false -n true SIGTRAP"]
+    },
+    {
+      // Release variant of the config above. The binary is optimized, so
+      // breakpoints and stepping are unreliable - use it to verify real
+      // performance behavior, not to debug logic.
+      "type": "lldb",
+      "request": "launch",
+      "name": "Launch H3Forge (release build)",
+      "terminal": "console",
+      "preLaunchTask": "npm: desktop:build (release)",
+      "program": "${workspaceFolder}/.local/release/H3Forge.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"],
+      "postRunCommands": ["process handle -p false -s false -n true SIGTRAP"]
+    },
+    {
+      // Hot-reload workflow: starts `npm run desktop:dev` (Vite + `tauri dev`)
+      // in the background, then attaches to the app once the dev profile
+      // build finishes. If attach races the window start, run the
+      // "npm: desktop:dev (tauri dev)" task from Terminal > Run Task first
+      // and use this configuration afterwards.
+      "type": "lldb",
+      "request": "attach",
+      "name": "Attach to H3Forge (tauri dev)",
+      "preLaunchTask": "npm: desktop:dev (tauri dev)",
+      "program": "${workspaceFolder}/target/debug/H3Forge.exe",
+      "sourceLanguages": ["rust"],
+      "postRunCommands": ["process handle -p false -s false -n true SIGTRAP"]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Rust: h3forge-save unit tests",
+      "cargo": {
+        "args": ["test", "-p", "h3forge-save", "--lib", "--offline", "--no-run"],
+        "filter": { "name": "h3forge_save", "kind": "lib" }
+      },
+      "args": ["--nocapture"],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Rust: h3forge-save e2e tests",
+      "cargo": {
+        "args": ["test", "-p", "h3forge-save", "--test", "e2e", "--offline", "--no-run"],
+        "filter": { "name": "e2e", "kind": "test" }
+      },
+      "args": ["--nocapture"],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"]
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Rust: h3forge-desktop overview tests",
+      "cargo": {
+        "args": [
+          "test",
+          "-p",
+          "h3forge-desktop",
+          "--test",
+          "overview",
+          "--offline",
+          "--no-run"
+        ],
+        "filter": { "name": "overview", "kind": "test" }
+      },
+      "args": ["--nocapture"],
+      "cwd": "${workspaceFolder}",
+      "sourceLanguages": ["rust"]
+    }
+  ]
+}

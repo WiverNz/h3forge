@@ -1,0 +1,97 @@
+/* Palette adapted from FlightTrace; see licenses/FlightTrace-MIT.txt.
+   Dark overrides also follow live OS changes when no explicit theme is set.
+   Text accents/status colors in light mode are deepened for readability.
+   Dark mode retains H3Forge's original gold buttons and accents. */
+:root {
+  font-family: "Segoe UI", system-ui, sans-serif;
+  --radius: 16px;
+}
+
+:root {
+  color-scheme: light;
+  --background: #fafaf8;
+  --surface: #f5f0e8;
+  --surface-raised: #ede6d7;
+  --text: #1a1816;
+  --muted: #5a554f;
+  --gold: #a8442d;
+  --accent-fill: #c4553a;
+  --accent-hover: #a8442d;
+  --on-accent: #ffffff;
+  --success: #506842;
+  --error: #b0413e;
+  --warning: #855719;
+  --border: rgba(0, 0, 0, 0.18);
+  --neutral-bg: rgba(0, 0, 0, 0.06);
+  --highlight: rgba(196, 85, 58, 0.10);
+  --accent-border: rgba(196, 85, 58, 0.45);
+  --success-bg: rgba(111, 138, 95, 0.12);
+  --player-red: #a73535;
+  --player-blue: #365fa5;
+  --player-tan: #78603a;
+  --player-green: #386b46;
+  --player-orange: #94521c;
+  --player-purple: #774897;
+  --player-teal: #276e69;
+  --player-pink: #9a426f;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #1a1816;
+  --surface: #25221f;
+  --surface-raised: #2f2b27;
+  --text: #f0ebe3;
+  --muted: #c8bfb4;
+  --gold: #e2bc72;
+  --accent-fill: #e2bc72;
+  --accent-hover: #f0cf93;
+  --on-accent: #211c12;
+  --success: #9cb088;
+  --error: #e68062;
+  --warning: #e0a35c;
+  --border: rgba(255, 255, 255, 0.18);
+  --neutral-bg: rgba(255, 255, 255, 0.06);
+  --highlight: #e2bc7218;
+  --accent-border: #e2bc7250;
+  --success-bg: rgba(156, 176, 136, 0.16);
+  --player-red: #db7777;
+  --player-blue: #779ee5;
+  --player-tan: #c4ac82;
+  --player-green: #77b58b;
+  --player-orange: #d99b65;
+  --player-purple: #af88d2;
+  --player-teal: #69b8b2;
+  --player-pink: #d992b7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --background: #1a1816;
+    --surface: #25221f;
+    --surface-raised: #2f2b27;
+    --text: #f0ebe3;
+    --muted: #c8bfb4;
+    --gold: #e2bc72;
+    --accent-fill: #e2bc72;
+    --accent-hover: #f0cf93;
+    --on-accent: #211c12;
+    --success: #9cb088;
+    --error: #e68062;
+    --warning: #e0a35c;
+    --border: rgba(255, 255, 255, 0.18);
+    --neutral-bg: rgba(255, 255, 255, 0.06);
+    --highlight: #e2bc7218;
+    --accent-border: #e2bc7250;
+    --success-bg: rgba(156, 176, 136, 0.16);
+    --player-red: #db7777;
+    --player-blue: #779ee5;
+    --player-tan: #c4ac82;
+    --player-green: #77b58b;
+    --player-orange: #d99b65;
+    --player-purple: #af88d2;
+    --player-teal: #69b8b2;
+    --player-pink: #d992b7;
+  }
+}

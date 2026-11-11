@@ -1,0 +1,21 @@
+[package]
+name = "h3forge-save"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+# Pure-Rust DEFLATE with bounded output; exact pin matches the workspace lock graph.
+miniz_oxide = { version = "=0.9.1", default-features = false, features = ["std", "with-alloc"] }
+# Gzip trailer CRC-32; exact pin matches the workspace lock graph.
+crc32fast = "=1.5.4"
+
+[dev-dependencies]
+# Opt-in private fixture fingerprinting only; synthetic tests need no game data.
+sha2 = "=0.10.9"
+h3forge-map = { path = "../h3forge-map" }
+
+[lints]
+workspace = true

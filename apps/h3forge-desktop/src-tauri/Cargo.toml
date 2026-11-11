@@ -1,0 +1,40 @@
+[package]
+name = "h3forge-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+default-run = "H3Forge"
+
+[[bin]]
+name = "H3Forge"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+h3forge-save.workspace = true
+h3forge-resources.workspace = true
+h3forge-map.workspace = true
+serde.workspace = true
+tauri.workspace = true
+tauri-runtime-wry.workspace = true
+# Deliberate transitive compatibility constraint; see workspace pin.
+tauri-runtime.workspace = true
+sys-locale = "=0.3.2"
+
+[target.'cfg(windows)'.dependencies]
+# Selected for the Rust-owned picker in H3F-002; no picker exposed in M0.
+rfd.workspace = true
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
+
+[dev-dependencies]
+sha2 = "=0.10.9"
+serde_json = "=1.0.154"
+
+[lints]
+workspace = true

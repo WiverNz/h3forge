@@ -1,0 +1,33 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/h3forge-save",
+    "crates/h3forge-resources",
+    "crates/h3forge-map",
+    "apps/h3forge-desktop/src-tauri",
+]
+default-members = ["crates/h3forge-save", "crates/h3forge-resources", "crates/h3forge-map"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99.1"
+license = "MIT"
+publish = false
+
+[workspace.dependencies]
+serde = { version = "=1.0.229", features = ["derive"] }
+h3forge-save = { path = "crates/h3forge-save" }
+h3forge-resources = { path = "crates/h3forge-resources" }
+h3forge-map = { path = "crates/h3forge-map" }
+tauri = { version = "=3.0.0-alpha.5" }
+tauri-runtime-wry = { version = "=3.0.0-alpha.5" }
+# alpha.5 removes dispatcher methods required by tauri/Wry alpha.5.
+# Their upstream ~alpha.4 ranges otherwise allow that incompatible release.
+tauri-runtime = { version = "=3.0.0-alpha.4" }
+tauri-build = { version = "=3.0.0-alpha.4" }
+# Rust-owned native dialogs; no Tauri plugin or frontend filesystem access.
+rfd = { version = "=0.15.4", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"

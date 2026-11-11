@@ -1,0 +1,7 @@
+{
+  // Keep rust-analyzer aligned with the project's offline, lockfile-pinned
+  // workflow (see AGENTS.local.md: network is restricted on this machine).
+  "rust-analyzer.cargo.extraArgs": ["--offline"],
+  "rust-analyzer.check.extraArgs": ["--locked", "--offline"],
+  "rust-analyzer.testExplorer": true
+}

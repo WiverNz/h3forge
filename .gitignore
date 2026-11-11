@@ -1,0 +1,32 @@
+# Private reference data: never stage, package, move, or modify.
+/[gG][aA][mM][eE][sS]/
+/[dD][aA][tT][aA]/
+
+# Build products and dependencies; retain Cargo.lock and npm lockfiles.
+target/
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+/apps/h3forge-desktop/src-tauri/gen/
+
+# Local fixtures, decoded assets, backups, and scratch files.
+/.vscode/task-history.ndjson
+/AGENTS.local.md
+/.local/
+/.cache/
+/tmp/
+/captures/
+*.tmp
+*.temp
+*.bak
+*.log
+__pycache__/
+*.pyc
+.env
+.env.local
+.env.*.local
+.DS_Store
+Thumbs.db
+Desktop.ini
+Maps/

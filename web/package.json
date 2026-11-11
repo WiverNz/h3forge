@@ -1,0 +1,34 @@
+{
+  "name": "h3forge-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "check": "tsc --noEmit",
+    "test": "node --test src/lib/*.test.ts",
+    "test:i18n-ui": "esbuild src/i18n/render.test.tsx --bundle --platform=node --format=cjs --outfile=../.local/i18n-render.test.cjs && node --test ../.local/i18n-render.test.cjs",
+    "build": "npm run check && vite build",
+    "desktop:dev": "cd ../apps/h3forge-desktop && tauri dev",
+    "desktop:build": "cd ../apps/h3forge-desktop && tauri build --no-bundle",
+    "desktop:build:debug": "cd ../apps/h3forge-desktop && tauri build --debug --no-bundle"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "3.0.0-alpha.3",
+    "i18next": "25.6.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-i18next": "16.3.5"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "3.0.0-alpha.4",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.0",
+    "typescript": "5.9.3",
+    "vite": "7.2.2"
+  }
+}

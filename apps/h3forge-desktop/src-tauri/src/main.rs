@@ -1,0 +1,54 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+fn main() -> Result<(), tauri::Error> {
+    tauri::Builder::default()
+        .runtime(tauri_runtime_wry::Wry::default())
+        .manage(std::sync::Mutex::new(
+            h3forge_desktop::session::AppState::new(),
+        ))
+        .invoke_handler(tauri::generate_handler![
+            h3forge_desktop::commands::get_app_info,
+            h3forge_desktop::commands::get_ui_languages,
+            h3forge_desktop::commands::choose_save,
+            h3forge_desktop::commands::open_granted_save,
+            h3forge_desktop::commands::list_heroes,
+            h3forge_desktop::commands::get_hero,
+            h3forge_desktop::commands::get_installation_status,
+            h3forge_desktop::commands::choose_installation,
+            h3forge_desktop::commands::get_hero_portrait,
+            h3forge_desktop::commands::get_hero_portraits,
+            h3forge_desktop::commands::apply_hero_edit,
+            h3forge_desktop::commands::get_hero_edit_state,
+            h3forge_desktop::commands::get_pending_edits,
+            h3forge_desktop::commands::discard_hero_edits,
+            h3forge_desktop::commands::set_hero_dismissal,
+            h3forge_desktop::commands::discard_all_edits,
+            h3forge_desktop::commands::get_resource_icon,
+            h3forge_desktop::commands::list_players,
+            h3forge_desktop::commands::list_neutral_armies,
+            h3forge_desktop::commands::apply_neutral_edit,
+            h3forge_desktop::commands::discard_neutral_edits,
+            h3forge_desktop::commands::get_player_flag,
+            h3forge_desktop::commands::get_player_starting_portrait,
+            h3forge_desktop::commands::apply_player_edit,
+            h3forge_desktop::commands::discard_player_edits,
+            h3forge_desktop::commands::list_towns,
+            h3forge_desktop::commands::get_town,
+            h3forge_desktop::commands::apply_town_edit,
+            h3forge_desktop::commands::get_town_edit_state,
+            h3forge_desktop::commands::discard_town_edits,
+            h3forge_desktop::commands::save_save_as,
+            h3forge_desktop::commands::save,
+            h3forge_desktop::commands::get_creature_portrait,
+            h3forge_desktop::commands::get_spell_icon,
+            h3forge_desktop::commands::get_town_icon,
+            h3forge_desktop::commands::get_building_icon,
+            h3forge_desktop::commands::get_skill_icon,
+            h3forge_desktop::commands::get_artifact_icon,
+            h3forge_desktop::commands::get_map_link,
+            h3forge_desktop::commands::rescan_maps,
+            h3forge_desktop::commands::select_map_candidate,
+            h3forge_desktop::commands::choose_map_file,
+        ])
+        .run(tauri::generate_context!())
+}
