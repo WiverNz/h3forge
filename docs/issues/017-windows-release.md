@@ -14,7 +14,7 @@ Status: portable release automation implemented and locally artifact-verified; f
   opts into pushing; otherwise everything remains local. An exact `push vX.Y.Z`
   confirmation precedes the atomic origin push. `--dry-run` previews without
   mutations. No commit, tag, push or release was performed during implementation.
-- [release.yml](../../.github/workflows/release.yml) runs only for pushed `v*`
+- [portable-release.yml](../../.github/workflows/portable-release.yml) runs for pushed `v*`
   tags on `windows-latest`, pins Rust 1.99.1 and Node 24.13.0, uses npm ci and
   locked Cargo, checks versions against the tag, builds via the installed Tauri 3
   CLI with `--no-bundle`, and publishes only the EXE and SHA-256 checksum.
@@ -96,6 +96,19 @@ from `web/` passed TypeScript checking, the Vite production build, and the nativ
 Tauri build, producing `target/debug/H3Forge.exe`. The first sandboxed attempt
 blocked esbuild process creation (`EPERM`); the approved retry passed. Native
 window/taskbar appearance has not been visually checked.
+
+## Workflow registration recovery (2026-11-12)
+
+GitHub reported workflow 414703120 as `deleted` despite the file being present
+on main and v0.1.3. The v0.1.3 SSH push succeeded; Actions was enabled, but no
+run was created. Enabling the deleted workflow returned HTTP 403. The reason
+for GitHub's deleted state remains unknown.
+
+Renamed the workflow to `portable-release.yml` to request fresh registration
+on the next push. Added `workflow_dispatch` with a tag-only job guard. Manual
+runs require the new workflow at the selected tag and on the default branch.
+Existing tags remain unchanged. Remote registration and execution remain
+pending the maintainer's push; no release was published by this recovery.
 
 ## Goal
 

@@ -41,12 +41,24 @@ The focused CLI regression runs with
 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/tests/release.test.ps1`.
 It uses ignored fixtures and mocks every Git call, including commit/tag/push.
 
-The tag-only workflow checks metadata against the tag, installs pinned tools and
+The release workflow checks metadata against the tag, installs pinned tools and
 locked dependencies, runs the Tauri 3 release build (including the Vite hook), and
 uploads exactly `H3Forge.exe` and `H3Forge.exe.sha256`. No MSI/NSIS/ZIP or directory
 upload is configured. Only `contents: write` is granted to the release job.
 The release title uses the pushed tag; the body comes from
 [RELEASE_NOTES.md](RELEASE_NOTES.md). Update that file before preparing a version.
+
+The workflow is `.github/workflows/portable-release.yml`. It supports pushed
+`v*` tags and manual dispatch, with a guard that skips branch-based runs.
+After this workflow exists on both main and a release tag, a manual run is:
+
+```powershell
+gh workflow run portable-release.yml --ref v0.1.4 --repo WiverNz/h3forge
+```
+
+Use the actual release tag. Older tags that lack this workflow cannot use this
+command. Manual dispatch builds and publishes, so use it only for an unpublished
+release. The workflow does not overwrite an existing GitHub Release.
 
 Build locally without creating any Git objects or publishing:
 
