@@ -889,3 +889,30 @@ factions/heroes; there are no new town/portrait mappings.
 `iTG0LtBl.pcx` through `iTG7Blak.pcx`. It was not selected because the
 current generic decoder retains a cyan background in that asset. No global
 transparency-rule change or guessed palette rewrite was introduced.
+
+
+## H3F-028 - Original Keymaster Tent icons
+
+Verified in installed `H3sprite.lod`: `AVXkey00.def` through `AVXkey70.def`.
+Class-10 templates in both the current GM2 and the H3M reader identify subtype
+0..7 as Light Blue, Green, Red, Dark Blue, Brown, Purple, White, Black. Each
+DEF has type 0x43, one group/frame named `AVXkey{c}0.pcx`, canvas 96x64,
+96x55 crop at (0,9), and compression 3. All eight were decoded and visually
+checked. No opaque HotA.lod name guessing or replacement artwork is involved.
+
+The bounded Rust DEF reader additionally accepts map type 0x43 and format 3:
+width must be divisible by 32; each row has width/32 little-endian u16 block
+offsets relative to the frame body. A tag's top 3 bits select palette index
+0..6 or literal code 7; low 5 bits encode run length minus one. Each independently
+addressed block produces exactly 32 pixels. Tables, offsets, literal lengths,
+run extents, canvas/crop and resource limits are checked. Format 2 and other
+DEF types remain unsupported. Format facts were cross-checked with
+[VCMI CDefFile](https://github.com/vcmi/vcmi/blob/develop/client/render/CDefFile.cpp);
+no GPL implementation code was copied.
+
+`KeymasterIcons` verifies names/count/dimensions and caches PNGs by color.
+For compact icons only, special map shadow/selection indices 0..7 are transparent;
+indices 8..255 and the original canvas are preserved. This is not a full map
+shadow renderer. Existing interface palette conversion is unchanged. The desktop
+cache uses archive source identity; frontend requests only a typed color ID.
+No original DEF/PNG files are bundled; absent archives yield placeholders.

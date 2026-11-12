@@ -360,3 +360,34 @@ fn discovery_is_bounded_to_the_given_folder_and_depth() {
     assert!(read_map_header(&root.join("Maps/notes.txt"), MapLimits::default(), limits).is_err());
     std::fs::remove_dir_all(&root).unwrap();
 }
+
+#[test]
+fn keymaster_template_color_sprite_and_position_are_bounded() {
+    let mut payload = sod_header(b"Tents", b"", 2, true);
+    payload.extend_from_slice(&[0; 31 + 18 + 13 + 4 + 156]);
+    payload.extend_from_slice(&[0; 2 * 2 * 2 * 7]);
+    payload.extend_from_slice(&1u32.to_le_bytes());
+    template(&mut payload, 10, 2);
+    payload.extend_from_slice(&1u32.to_le_bytes());
+    let at = payload.len();
+    object_start(&mut payload, 1, 1, 1, 0);
+    payload.extend_from_slice(&0u32.to_le_bytes());
+    let body = parse_map(&payload, MapLimits::default())
+        .unwrap()
+        .body
+        .unwrap();
+    assert_eq!(body.keymaster_tents.len(), 1);
+    assert_eq!(
+        body.keymaster_tents[0].0,
+        h3forge_map::Position { x: 1, y: 1, z: 1 }
+    );
+    assert_eq!(body.keymaster_tents[0].1, 2);
+    assert!(!body.keymaster_tents[0].2.is_empty());
+    payload[at] = 2;
+    assert!(
+        parse_map(&payload, MapLimits::default())
+            .unwrap()
+            .body
+            .is_err()
+    );
+}

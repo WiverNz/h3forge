@@ -1,5 +1,21 @@
 import type { Catalog } from '../types';
 export const de = {
+  "tents": {
+    "title": "Schlüsselmeisterzelte",
+    "visited": "Besucht",
+    "notVisited": "Nicht besucht",
+    "clear": "Besuche dieses Spielers löschen",
+    "scope": "Besuche nur für {{player}}. Gewährt Zugang zu passenden Grenzwachen und Toren; entfernt keine Wachen. Änderungen werden erst beim Speichern geschrieben.",
+    "unavailable": "Zeltstatus nicht verfügbar: kein verifiziertes HotA-44/11-Layout.",
+    "lightBlue": "Hellblau",
+    "green": "Grün",
+    "red": "Rot",
+    "darkBlue": "Dunkelblau",
+    "brown": "Braun",
+    "purple": "Violett",
+    "white": "Weiß",
+    "black": "Schwarz"
+},
   "neutral": {
     "diagnostics": "Erweitert / Diagnose",
     "needsEvidence": "Weitere Nachweise aus dem Spiel sind erforderlich.",

@@ -1537,3 +1537,113 @@ parser round trips. Cross-level, boarding/landing, town/object interactions and
 changes of underlying shape stay disabled. No repeat one-step experiment is
 requested; a boarding pair would provide new medium/boat-attachment information
 only when that separate scope is pursued. See [H3F-019](../issues/019-map-coordinates.md).
+
+
+## H3F-028 - Keymaster Tent visits (HotA 44/11)
+
+Verified with `SaAndVla_before_visit_red_tent.GM2` and
+`SaAndVla_after_visit_red_tent.GM2`: Pink visited the Red Tent at
+(142,131,1). Original compressed SHA-256:
+
+- Before: `94cc0f08cac1a9db3d239f157245309b5f9018834ff494910f0dba9ff5ffaf45`
+- After: `c4daae6aee288a12fa19bf2c1e59be67346db042a6bf6e7868426934ded04314`
+
+### Verified layout and edit boundary
+
+Let `H` be the end of the last located fixed hero record. Require exact 44/11,
+215 fully verified heroes ordered by type 0..214, and an owner table at `H+12`
+consistent with every hero. The following 215 bytes are the hireability table.
+The fixed globals begin at `G = H+12+430`; bounded header/date checks precede
+access. The tent table is `G+109`, eight bytes, each a player bitmask.
+This is a relative structural anchor, never an absolute sample offset or a
+frontend-supplied offset. The classic specification's globals sizes agree:
+17 bytes through date, 32 opaque bytes, 28 merchant bytes, 32 object-visit masks,
+then eight tent masks. The surrounding globals are never written.
+
+| Color ID | Tent color | Pair offset | Before mask | After mask | Original sprite |
+|---|---|---:|---|---|---|
+| 0 | Light Blue | 4552402 | 40 | 40 | AVXkey00.def |
+| 1 | Green | 4552403 | 08 | 08 | AVXkey10.def |
+| 2 | Red | 4552404 | 01 | 81 | AVXkey20.def |
+| 3 | Dark Blue | 4552405 | 02 | 02 | AVXkey30.def |
+| 4 | Brown | 4552406 | 04 | 04 | AVXkey40.def |
+| 5 | Purple | 4552407 | 20 | 20 | AVXkey50.def |
+| 6 | White | 4552408 | 7E | 7E | AVXkey60.def |
+| 7 | Black | 4552409 | 10 | 10 | AVXkey70.def |
+
+Masks are hexadecimal. Player bits 0..7 are Red, Blue, Tan, Green, Orange,
+Purple, Teal, Pink. Tent colors have a DIFFERENT order from player colors.
+For this pair `H=4551851`, owner table=4551863, `G=4552293`.
+In the older `SaAndVla.GM2`, H=4922142 and tent base=4922693; masks are
+`40 58 40 02 50 60 5C 00`. Absolute positions are not compatibility gates.
+
+`TentEdit { player, color, visited }` sets or clears only `1 << player`.
+All edits are composed before emitting at most one BytePatch per color, so
+changing two players for Red cannot overwrite one another or create overlapping
+patches. Duplicate player/color requests and IDs outside 0..7 are rejected.
+Expected old bytes, same-length patch validation and existing verified-save
+replacement remain enforced. No-op/change-back removes the pending operation.
+The planner re-derives anchors from immutable bytes, ignoring mutable public DTOs.
+
+These masks are the player-wide keys for matching Border Guards/Gates. The
+editor does not remove guards, restore removed guards, simulate a visit/movement,
+reveal fog, update replay history, or propagate the selected player's edit to
+allies. Clearing access does not resurrect an already removed guard. There is no
+separate tent visit counter in the supplied native action diff. Actual native
+HotA reload and guard/gate interaction remain a manual validation gate; only
+Pink/Red has an observed native transition. The other 63 operations use the
+verified shared bitmask structure, enum and current-save templates, with exact
+independent-bit round-trip tests, not 63 additional native action pairs.
+
+### Exhaustive aligned pair difference
+
+Compressed sizes: 1,383,951 and 1,383,965 bytes. Payload sizes: 5,012,796 and
+5,012,847. A naive same-position comparison reports 61,300 differing bytes in
+15,234 runs, plus 51 trailing bytes, because the replay insertion shifts the
+suffix. After alignment there are exactly **47 changed bytes and 51 inserted
+bytes**. The entire 90,987-byte suffix at before 4921809 / after 4921860 is
+identical. No other insertion or deletion is needed.
+
+All replacement runs before that insertion (end offsets exclusive):
+
+| Offset/range | Before hex | After hex | Interpretation |
+|---|---|---|---|
+| 908..912 | 6265666f | 61667465 | Stored save filename |
+| 913..933 | 655f76697369745f7265645f74656e742e474d32 | 5f76697369745f7265645f74656e742e474d3200 | Stored save filename |
+| 2764611 | 0a | 22 | Destination tile: tent to hero class |
+| 2764617..2764621 | ffffffff | 46000000 | Destination tile: hero type 70 |
+| 2771232..2771234 | 1022 | 0000 | Source tile flags/class cleared |
+| 2771239..2771243 | 46000000 | ffffffff | Source tile properties cleared |
+| 4383620 | 8f | 8e | Hero X: 143 to 142 |
+| 4383622 | 84 | 83 | Hero Y: 132 to 131 |
+| 4383627 | 8f | 8e | Packed coordinate X |
+| 4383629 | 84 | 83 | Packed coordinate Y |
+| 4383631 | 00 | 0a | Object-under class becomes tent |
+| 4383635 | 00 | 01 | Object-under boolean |
+| 4383661 | 00 | 07 | Hero facing |
+| 4383681..4383683 | 7204 | e503 | Remaining movement 1138 to 997 |
+| 4552404 | 01 | 81 | Red Tent: Pink's bit set |
+| 4869145 | 7d | 80 | Replay total 2429 to 2432 (u32) |
+| 4921675 | 04 | 05 | Existing replay-local counter; not a tent counter |
+
+At 4921809 the after file inserts these 51 bytes:
+
+`0c071000000008000000460000000000000007000000010746000000078f0084048e0083040c07080000000600000001000000`
+
+Three replay records: type 12 (22 bytes, hero/facing update), type 1 (15 bytes,
+hero 70, facing 7, old/new packed coordinates), type 12 (14 bytes, subkind 6,
+value 1). Full replay subkind semantics remain unverified; these records and
+both replay counters are incidental to editor access changes and are preserved.
+All fog/visibility, resources, other player state, object templates, other hero
+records, town records and later tail bytes are identical after alignment. No RNG
+mutation is established by this pair.
+
+The current save's tile at 2764603 has class 10/subtype 2 and its object table
+contains exactly the supplied (142,131,1) Red Tent. All eight current-save class-10
+templates map color c to `AVXkey{c}0.def`. The existing local H3M reference also
+agrees on all eight subtype/sprite mappings, but has different tent coordinates;
+it is not claimed to be this pair's exact scenario and is never a write anchor.
+
+Sources: [h3svg SavedGame specification](https://github.com/alexanderbelous/h3mtxt/blob/h3svg/doc/h3svg_specification.MD)
+and [KeymastersTentType enum](https://github.com/alexanderbelous/h3mtxt/blob/h3svg/src/h3mtxt/SavedGame/Constants/KeymastersTentType.h).
+These are format facts only; no third-party implementation was copied.

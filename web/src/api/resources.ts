@@ -194,3 +194,5 @@ export async function getPlayerStartingPortrait(id: number): Promise<PortraitDto
   requireTauri();
   return invoke('get_player_starting_portrait', { id });
 }
+
+export async function getKeymasterIcon(color: number): Promise<import("../types/api").PortraitDto> { return invoke("get_keymaster_icon", { color }); }

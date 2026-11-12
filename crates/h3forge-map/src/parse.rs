@@ -330,6 +330,7 @@ fn read_victory_loss(r: &mut Reader<'_>, f: Features) -> Result<(), MapError> {
 // ------------------------------------------------------------------ body --
 
 struct Template {
+    sprite: Vec<u8>,
     class: u32,
     subclass: u32,
 }
@@ -442,12 +443,16 @@ fn read_body(
     let template_count = r.count(limits.max_objects, "object template count")?;
     let mut templates = Vec::with_capacity(template_count.min(4096));
     for _ in 0..template_count {
-        r.skip_string("template sprite name")?;
+        let sprite = r.string("template sprite name")?.to_vec();
         r.skip(6 + 6 + 2 + 2, "template masks")?;
         let class = r.u32("template class")?;
         let subclass = r.u32("template subclass")?;
         r.skip(1 + 1 + 16, "template tail")?;
-        templates.push(Template { class, subclass });
+        templates.push(Template {
+            class,
+            subclass,
+            sprite,
+        });
     }
 
     // Object instances.
@@ -463,6 +468,20 @@ fn read_body(
         })?;
         r.skip(5, "object padding")?;
         *classes.entry(template.class).or_default() += 1;
+        if template.class == 10 {
+            if u32::from(anchor.x) >= header.size
+                || u32::from(anchor.y) >= header.size
+                || usize::from(anchor.z) >= levels
+                || template.subclass > 7
+            {
+                return Err(MapError::Invalid {
+                    offset: at,
+                    what: "Keymaster Tent position or color",
+                });
+            }
+            body.keymaster_tents
+                .push((anchor, template.subclass, template.sprite.clone()));
+        }
         if template.class == 57 {
             if u32::from(anchor.x) >= header.size
                 || u32::from(anchor.y) >= header.size

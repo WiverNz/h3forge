@@ -179,3 +179,5 @@ export async function discardNeutralEdits(id: number): Promise<import('../types/
   requireTauri();
   return invoke('discard_neutral_edits', { id });
 }
+
+export async function applyTentEdit(id: number, color: number, visited: boolean): Promise<import("../types/api").PlayerDto[]> { return invoke("apply_tent_edit", { id, color, visited }); }

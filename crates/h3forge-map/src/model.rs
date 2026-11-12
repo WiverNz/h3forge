@@ -181,6 +181,8 @@ pub struct TownBuildings {
 /// Data that requires walking the whole payload.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct MapBody {
+    /// Keymaster Tent sprite anchors, color subtypes and original DEF names.
+    pub keymaster_tents: Vec<(Position, u32, Vec<u8>)>,
     /// Authored armies only; never evidence of current savegame quantities.
     pub neutral_armies: Vec<MapArmy>,
     pub heroes: Vec<MapHero>,

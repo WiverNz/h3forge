@@ -17,7 +17,7 @@ test('four-language shell, editor and error rendering keeps identities, classes 
   const player = {
     id: 0, color: 0, name: 'Red', status: 'active', statusReason: 'technical detail',
     heroCount: 1, townCount: 1, resources: [1, 2, 3, 4, 5, 6, 7], original: [1, 2, 3, 4, 5, 6, 7],
-    dirtyResources: [], readOnlyReason: null, details: { startingHero: null, startingTown: null, team: null, eligibility: null,
+    tentVisits: Array(8).fill(false), originalTentVisits: Array(8).fill(false), dirtyTents: [], dirtyResources: [], readOnlyReason: null, details: { startingHero: null, startingTown: null, team: null, eligibility: null,
       allies: null, enemies: null, mapSize: null, obelisks: null },
   } as unknown as PlayerDto;
   for (const language of languages) {
@@ -34,8 +34,11 @@ test('four-language shell, editor and error rendering keeps identities, classes 
     assert.ok(army.includes('army-stack-dirty'));
     assert.ok(army.includes('value="1234"'));
     const players = renderToStaticMarkup(<PlayersPanel players={[player]} selectedId={0} onSelect={() => {}}
-      onEdit={() => { throw new Error('render must not edit'); }} onRevert={() => {}}
+      onTentEdit={() => { throw new Error("render must not edit"); }} onEdit={() => { throw new Error('render must not edit'); }} onRevert={() => {}}
       epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={0} />);
+    assert.ok(players.includes(t('tents.title')));
+    assert.equal((players.match(/<select /g) ?? []).length, 8);
+    assert.ok(players.includes(t('tents.notVisited')));
     assert.ok(players.includes('id="tab-Resources"'));
     assert.ok(players.includes('id="player-Resources"'));
     assert.ok(players.includes(t('common.resources')));

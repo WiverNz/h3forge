@@ -1741,6 +1741,9 @@ pub struct TownEditResponseDto {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    pub tent_visits: Option<[bool; 8]>,
+    pub original_tent_visits: Option<[bool; 8]>,
+    pub dirty_tents: Vec<u8>,
     pub status: &'static str,
     pub status_reason: &'static str,
     pub details: crate::player_details::PlayerDetailsDto,

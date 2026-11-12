@@ -1,7 +1,7 @@
 //! Bounded static interface DEF reader, written for H3F-006.
 //! Format facts cross-checked with VCMI client/render/CDefFile.cpp and local
 //! TwCrPort.def headers; no third-party decoder implementation is copied.
-//! Supports type 0x47, raw (0) and per-row RLE (1). Other types/encodings fail.
+//! Supports interface 0x47 and map 0x43; raw (0), row RLE (1), block RLE (3).
 
 use crate::{ResourceError, ResourceLimits, RgbaImage};
 
@@ -81,8 +81,10 @@ impl DefFile {
             return Err(invalid("DEF exceeds entry byte limit"));
         }
         bytes(&data, 0, 784)?;
-        if word(&data, 0)? != 0x47 {
-            return Err(invalid("only interface DEF type 0x47 is supported"));
+        if ![0x47, 0x43].contains(&word(&data, 0)?) {
+            return Err(invalid(
+                "only interface/map DEF types 0x47/0x43 are supported",
+            ));
         }
         area(word(&data, 4)?, word(&data, 8)?, limits)?;
         let groups = word(&data, 12)?;
@@ -169,7 +171,7 @@ impl DefFile {
         let data = bytes(&self.data, frame.offset, end - frame.offset)?;
         let size = word(data, 0)?;
         let format = word(data, 4)?;
-        if format > 1 {
+        if ![0, 1, 3].contains(&format) {
             return Err(ResourceError::DefCompression {
                 format: format as u32,
             });
@@ -194,6 +196,42 @@ impl DefFile {
             let target = &mut indices[(y + row) * full_w + x..(y + row) * full_w + x + w];
             if format == 0 {
                 target.copy_from_slice(bytes(body, row * w, w)?);
+                continue;
+            }
+            if format == 3 {
+                if w % 32 != 0 {
+                    return Err(invalid("block RLE width must be divisible by 32"));
+                }
+                let blocks = w / 32;
+                let table_size = h
+                    .checked_mul(blocks)
+                    .and_then(|v| v.checked_mul(2))
+                    .ok_or_else(|| invalid("block table overflow"))?;
+                bytes(body, 0, table_size)?;
+                for block in 0..blocks {
+                    let raw = bytes(body, (row * blocks + block) * 2, 2)?;
+                    let mut cursor = u16::from_le_bytes([raw[0], raw[1]]) as usize;
+                    if cursor < table_size {
+                        return Err(invalid("block overlaps offset table"));
+                    }
+                    let mut filled = 0;
+                    while filled < 32 {
+                        let tag = bytes(body, cursor, 1)?[0];
+                        cursor += 1;
+                        let len = (tag & 31) as usize + 1;
+                        if len > 32 - filled {
+                            return Err(invalid("RLE run exceeds block"));
+                        }
+                        let dest = &mut target[block * 32 + filled..block * 32 + filled + len];
+                        if tag >> 5 == 7 {
+                            dest.copy_from_slice(bytes(body, cursor, len)?);
+                            cursor += len;
+                        } else {
+                            dest.fill(tag >> 5);
+                        }
+                        filled += len;
+                    }
+                }
                 continue;
             }
             let table_size = h

@@ -190,3 +190,46 @@ fn local_twcrport_resolves_verified_standard_creatures() {
         out.display()
     );
 }
+
+#[test]
+fn map_block_rle_checks_every_block_and_bounds() {
+    // Two independently addressed 32-pixel blocks in one map frame.
+    fn frame(body: &[u8]) -> Vec<u8> {
+        let mut data = synthetic(&["map.pcx"], 3, body);
+        for (at, value) in [
+            (0, 0x43),
+            (4, 64),
+            (8, 1),
+            (817 + 8, 64),
+            (817 + 12, 1),
+            (817 + 16, 64),
+            (817 + 20, 1),
+            (817 + 24, 0),
+            (817 + 28, 0),
+        ] {
+            put(&mut data, at, value);
+        }
+        data
+    }
+    let mut body = vec![4, 0, 5, 0, 31, 255];
+    body.extend(8..40);
+    let image = DefFile::parse(frame(&body), ResourceLimits::default())
+        .unwrap()
+        .decode_index(0)
+        .unwrap();
+    assert_eq!(&image.indices[..32], &[0; 32]);
+    assert_eq!(&image.indices[32..], &(8..40).collect::<Vec<_>>());
+    for bad in [
+        vec![0, 0, 5, 0, 31, 31],
+        vec![4, 0, 255, 255, 31, 31],
+        vec![4, 0, 5, 0, 31, 255, 8],
+        vec![4, 0, 6, 0, 30, 31, 31],
+    ] {
+        assert!(
+            DefFile::parse(frame(&bad), ResourceLimits::default())
+                .unwrap()
+                .decode_index(0)
+                .is_err()
+        );
+    }
+}

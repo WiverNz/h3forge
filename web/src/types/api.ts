@@ -472,6 +472,9 @@ export interface MapLinkDto {
 }
 
 export interface PlayerDto {
+  tentVisits: boolean[] | null;
+  originalTentVisits: boolean[] | null;
+  dirtyTents: number[];
   status: 'active' | 'defeated' | 'unused' | 'unknown';
   statusReason: string;
   details: PlayerDetailsDto;

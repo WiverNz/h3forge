@@ -63,6 +63,7 @@ pub struct AppState {
     stored_installation_root: Option<PathBuf>,
     creature_art: Option<(SourceIdentity, h3forge_resources::CreaturePortraits)>,
     hota_creature_art: Option<(SourceIdentity, h3forge_resources::HotACreaturePortraits)>,
+    keymaster_icons: Option<(SourceIdentity, h3forge_resources::KeymasterIcons)>,
     player_flags: Option<(SourceIdentity, h3forge_resources::PlayerFlags)>,
     resource_icons: Option<(SourceIdentity, h3forge_resources::ResourceIcons)>,
     spell_icons: Option<(SourceIdentity, h3forge_resources::SpellIcons)>,
@@ -104,6 +105,7 @@ pub struct SaveSession {
     pending: BTreeMap<usize, BTreeMap<FieldKey, HeroEdit>>,
     /// Pending town garrison edits, keyed like `pending` (H3F-013).
     pending_towns: BTreeMap<usize, BTreeMap<TownFieldKey, TownEdit>>,
+    pending_tents: BTreeMap<(u8, u8), bool>,
     pending_players: BTreeMap<usize, BTreeMap<u8, i64>>,
     pending_neutral: BTreeMap<usize, BTreeMap<u8, h3forge_save::neutral::NeutralEdit>>,
     /// Heroes marked for dismissal (H3F-026); planned jointly at save time
@@ -315,6 +317,7 @@ impl AppState {
             document,
             pending: BTreeMap::new(),
             pending_towns: BTreeMap::new(),
+            pending_tents: BTreeMap::new(),
             pending_players: BTreeMap::new(),
             pending_neutral: BTreeMap::new(),
             pending_dismissals: BTreeSet::new(),
@@ -783,6 +786,22 @@ impl AppState {
                 });
             }
         }
+        if let Some(masks) = session.document.keymaster_masks() {
+            for (&(player, color), &visited) in &session.pending_tents {
+                let name = names::PLAYER_COLORS[player as usize];
+                out.push(PendingEditDto {
+                    record_kind: "player",
+                    record_id: player as usize,
+                    record_name: crate::dto::TextDto::new(name.as_bytes(), name),
+                    field: format!(
+                        "{} Keymaster Tent",
+                        h3forge_save::keymaster::TENT_COLORS[color as usize]
+                    ),
+                    before: (masks[color as usize] & (1 << player) != 0).to_string(),
+                    after: visited.to_string(),
+                });
+            }
+        }
         let neutral_base =
             (!session.pending_neutral.is_empty()).then(|| session.document.neutral_armies());
         for (&id, edits) in &session.pending_neutral {
@@ -856,6 +875,7 @@ impl AppState {
         session.pending.clear();
         session.pending_towns.clear();
         session.pending_players.clear();
+        session.pending_tents.clear();
         session.pending_neutral.clear();
         session.pending_dismissals.clear();
         self.pending_edits()
@@ -863,6 +883,7 @@ impl AppState {
 
     pub fn list_players(&self) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
         let session = self.session()?;
+        let masks = session.document.keymaster_masks();
         Ok(session
             .document
             .players
@@ -876,6 +897,22 @@ impl AppState {
                     }
                 }
                 crate::dto::PlayerDto {
+                    tent_visits: masks.map(|m| {
+                        std::array::from_fn(|c| {
+                            session
+                                .pending_tents
+                                .get(&(p.color, c as u8))
+                                .copied()
+                                .unwrap_or(m[c] & (1 << p.color) != 0)
+                        })
+                    }),
+                    original_tent_visits: masks
+                        .map(|m| std::array::from_fn(|c| m[c] & (1 << p.color) != 0)),
+                    dirty_tents: session
+                        .pending_tents
+                        .keys()
+                        .filter_map(|&(player, color)| (player == p.color).then_some(color))
+                        .collect(),
                     status: p.status.code(),
                     status_reason: p.status_reason,
                     details: crate::player_details::describe(
@@ -1036,6 +1073,32 @@ impl AppState {
         self.list_neutral_armies()
     }
 
+    pub fn apply_tent_edit(
+        &mut self,
+        id: u8,
+        color: u8,
+        visited: bool,
+    ) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
+        let session = self
+            .session
+            .as_mut()
+            .ok_or_else(AppErrorDto::no_open_save)?;
+        let patches = session
+            .document
+            .plan_tent_edits(&[h3forge_save::TentEdit {
+                player: id,
+                color,
+                visited,
+            }])
+            .map_err(AppErrorDto::edit_failed)?;
+        if patches.is_empty() {
+            session.pending_tents.remove(&(id, color));
+        } else {
+            session.pending_tents.insert((id, color), visited);
+        }
+        self.list_players()
+    }
+
     pub fn apply_player_edit(
         &mut self,
         id: usize,
@@ -1072,6 +1135,9 @@ impl AppState {
             .as_mut()
             .ok_or_else(AppErrorDto::no_open_save)?;
         session.pending_players.remove(&id);
+        session
+            .pending_tents
+            .retain(|&(p, _), _| usize::from(p) != id);
         self.list_players()
     }
 
@@ -1286,6 +1352,7 @@ impl AppState {
         !session.pending.is_empty()
             || !session.pending_towns.is_empty()
             || !session.pending_players.is_empty()
+            || !session.pending_tents.is_empty()
             || !session.pending_neutral.is_empty()
             || !session.pending_dismissals.is_empty()
     }
@@ -1349,6 +1416,23 @@ impl AppState {
                 session
                     .document
                     .plan_player_edits(id, &planned)
+                    .map_err(AppErrorDto::edit_failed)?,
+            );
+        }
+        if !session.pending_tents.is_empty() {
+            let edits: Vec<_> = session
+                .pending_tents
+                .iter()
+                .map(|(&(player, color), &visited)| h3forge_save::TentEdit {
+                    player,
+                    color,
+                    visited,
+                })
+                .collect();
+            patches.extend(
+                session
+                    .document
+                    .plan_tent_edits(&edits)
                     .map_err(AppErrorDto::edit_failed)?,
             );
         }
@@ -1457,6 +1541,7 @@ impl AppState {
         session.pending.clear();
         session.pending_towns.clear();
         session.pending_players.clear();
+        session.pending_tents.clear();
         session.pending_neutral.clear();
         session.pending_dismissals.clear();
         drop(_source_guard);
@@ -1793,6 +1878,41 @@ impl AppState {
     /// sprite archive. Frames are mapped by their embedded `HrArt###.pcx`
     /// names (see `h3forge-resources/src/artifact_icons.rs`); IDs outside the
     /// verified base/HotA ranges resolve to a placeholder reason.
+    pub fn keymaster_icon(&mut self, id: u32) -> Result<PortraitDto, AppErrorDto> {
+        let Some(path) = self
+            .installation()?
+            .installation
+            .archive_path("H3sprite.lod")
+        else {
+            return Ok(PortraitDto::unresolved("H3sprite.lod unavailable", None));
+        };
+        let identity = SourceIdentity::capture(&path).ok_or_else(AppErrorDto::no_base_artwork)?;
+        if self
+            .keymaster_icons
+            .as_ref()
+            .is_none_or(|(old, _)| *old != identity)
+        {
+            self.keymaster_icons = None;
+            let archive = LodArchive::open(&path).map_err(AppErrorDto::asset_failed)?;
+            self.keymaster_icons = Some((
+                identity,
+                h3forge_resources::KeymasterIcons::load(&archive)
+                    .map_err(AppErrorDto::asset_failed)?,
+            ));
+        }
+        match self
+            .keymaster_icons
+            .as_mut()
+            .and_then(|(_, icons)| icons.png(id).ok().flatten())
+        {
+            Some(png) => Ok(PortraitDto::resolved_png(png, None)),
+            None => Ok(PortraitDto::unresolved(
+                "No verified Keymaster Tent icon",
+                None,
+            )),
+        }
+    }
+
     pub fn player_flag(&mut self, id: u32) -> Result<PortraitDto, AppErrorDto> {
         let Some(path) = self
             .installation()?

@@ -586,3 +586,20 @@ pub fn discard_neutral_edits(
 ) -> Result<crate::neutral::NeutralListDto, AppErrorDto> {
     lock(&state)?.discard_neutral_edits(id)
 }
+
+#[tauri::command]
+pub fn apply_tent_edit(
+    state: State<'_, Mutex<AppState>>,
+    id: u8,
+    color: u8,
+    visited: bool,
+) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
+    lock(&state)?.apply_tent_edit(id, color, visited)
+}
+#[tauri::command]
+pub fn get_keymaster_icon(
+    state: State<'_, Mutex<AppState>>,
+    color: u32,
+) -> Result<crate::dto::PortraitDto, AppErrorDto> {
+    lock(&state)?.keymaster_icon(color)
+}

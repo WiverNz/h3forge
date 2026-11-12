@@ -167,3 +167,14 @@ current quantities, existence proof or GM2 patch destinations. Random or
 zero initial quantities retain their original values. The current GM2
 comparison and blockers are documented in
 [H3F-027](../issues/027-neutral-creatures.md).
+
+
+## H3F-028 - Keymaster Tent reference objects
+
+The bounded object walker retains class-10 anchors, subtype 0..7 and raw template
+sprite names in `MapBody.keymaster_tents`. Positions must fit the map dimensions
+and level count; unknown subtypes refuse the body. No payload follows this object
+class. The private reference maps subtypes to `AVXkey{c}0.def` for all eight colors.
+This authored H3M information never supplies current visit state or GM2 offsets.
+The supplied Pink/Red save pair's tent positions differ from the existing local
+H3M reference; matching save evidence governs the feature.

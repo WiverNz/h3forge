@@ -2,7 +2,7 @@ import { ReasonText } from '../i18n/reasons';
 import { colorName, resourceName } from '../i18n/labels';
 import { t, i18n } from '../i18n/index';
 import { useEffect, useRef, useState } from 'react';
-import { getResourceIcon, getPlayerFlag, getPlayerStartingPortrait } from '../api/resources';
+import { getKeymasterIcon, getResourceIcon, getPlayerFlag, getPlayerStartingPortrait } from '../api/resources';
 import type { PlayerDto, PortraitDto } from '../types/api';
 import { playerColor } from '../lib/playerColor';
 import { TownIcon } from './TownIcon';
@@ -17,6 +17,7 @@ function eligibility(value: string | null): string {
   const keys = { 'Human or Computer': 'messages.either', Human: 'messages.human', Computer: 'messages.computer', 'Not playable': 'messages.notPlayable' } as const;
   return value && Object.hasOwn(keys, value) ? t(keys[value as keyof typeof keys]) : t('ui.eligibilityUnknown');
 }
+const TENT_KEYS = ['lightBlue', 'green', 'red', 'darkBlue', 'brown', 'purple', 'white', 'black'] as const;
 const NAMES = ['Wood', 'Mercury', 'Ore', 'Sulfur', 'Crystal', 'Gems', 'Gold'];
 
 function ResourceInput({ value, original, name, disabled, dirty, onChange }: {
@@ -44,20 +45,23 @@ function ResourceInput({ value, original, name, disabled, dirty, onChange }: {
   </div>;
 }
 
-export function PlayersPanel({ players, selectedId, onSelect, onEdit, onRevert, epoch, artworkVersion, busy, encoding, mapLinkEpoch }: {
+export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit, onRevert, epoch, artworkVersion, busy, encoding, mapLinkEpoch }: {
   encoding: LegacyEncoding; mapLinkEpoch: number;
   players: PlayerDto[]; selectedId: number; onSelect: (id: number) => void;
+  onTentEdit: (id: number, color: number, visited: boolean) => void;
   onEdit: (id: number, resource: number, value: number) => void;
   onRevert: (id: number) => void; epoch: number; artworkVersion: string; busy: boolean;
 }) {
   const [tab, setTab] = useState<PlayerTab>('Resources');
   const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
   useEffect(() => { setTab('Resources'); }, [selectedId]);
+  const [tentIcons, setTentIcons] = useState<(PortraitDto | null)[]>([]);
   const [flags, setFlags] = useState<(PortraitDto | null)[]>([]);
   const [startingPortrait, setStartingPortrait] = useState<{ id: number; portrait: PortraitDto } | null>(null);
   const [icons, setIcons] = useState<(PortraitDto | null)[]>([]);
   useEffect(() => {
-    let active = true; setIcons([]); setFlags([]);
+    let active = true; setIcons([]); setFlags([]); setTentIcons([]);
+    Promise.all(TENT_KEYS.map((_, color) => getKeymasterIcon(color).catch(() => null))).then(result => { if (active) setTentIcons(result); });
     Promise.all(Array.from({ length: 8 }, (_, color) => getPlayerFlag(color).catch(() => null))).then((result) => { if (active) setFlags(result); });
     Promise.all(NAMES.map((_, id) => getResourceIcon(id).catch(() => null))).then((result) => {
       if (active) setIcons(result);
@@ -89,7 +93,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onRevert, 
           className={`hero-row ${p.id === selectedId ? 'selected' : ''} ${p.status === 'unknown' ? 'uncertain' : ''}`}
           onClick={() => { setTab('Resources'); onSelect(p.id); }}>
           {flag(p.color)}
-          <span className="hero-row-text"><span className="hero-row-name">{colorName(p.color)}{p.dirtyResources.length > 0 ? ' *' : ''}<span className={`player-status status-${p.status}`} title={t(p.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[p.status])}</span></span>
+          <span className="hero-row-text"><span className="hero-row-name">{colorName(p.color)}{(p.dirtyResources.length > 0 || p.dirtyTents.length > 0) ? ' *' : ''}<span className={`player-status status-${p.status}`} title={t(p.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[p.status])}</span></span>
             <span className="hero-row-meta">{eligibility(p.details.eligibility)} · {p.details.team === null ? t('ui.noVerifiedTeam') : t('ui.teamValue', { value1: p.details.team })} {t('ui.map2')}</span>
             <span className="hero-row-meta">{t('ui.valueHeroesValueTowns', { value1: p.heroCount, value2: p.townCount })}</span>
           </span>
@@ -100,7 +104,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onRevert, 
       {player && <section className="player-detail" data-player-color={playerColor({ kind: 'player', player: player.color })}>
         <header className="player-heading">{flag(player.color, true)}<div><h2>{colorName(player.color)}</h2>
           <p className="scope-note"><span className={`player-status status-${player.status}`} title={t(player.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[player.status])}</span> · {t('ui.valueHeroesValueTowns', { value1: player.heroCount, value2: player.townCount })}</p></div>
-          <button type="button" disabled={!player.dirtyResources.length || busy} onClick={() => onRevert(player.id)}>{t('ui.revertPlayer')}</button>
+          <button type="button" disabled={(!player.dirtyResources.length && !player.dirtyTents.length) || busy} onClick={() => onRevert(player.id)}>{t('ui.revertPlayer')}</button>
         </header>
         {player.readOnlyReason && <p className="scope-note">{<ReasonText reason={player.readOnlyReason} />}</p>}
         <div className="detail-tabs player-tabs" role="tablist" aria-label={t('ui.playerDetails')}>
@@ -159,6 +163,21 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onRevert, 
         </section>
         <section className="player-exploration" role="tabpanel" id="player-Exploration" aria-labelledby="tab-Exploration" hidden={tab !== 'Exploration'}>
 
+          <section className="keymaster-tents" aria-label={t('tents.title')}>
+            <h3>{t('tents.title')}</h3>
+            <p className="scope-note">{t('tents.scope', { player: colorName(player.color) })}</p>
+            {player.tentVisits ? <>
+              <div className="tent-grid">{TENT_KEYS.map((key, color) => <label className={`tent-row ${player.dirtyTents.includes(color) ? 'tent-dirty' : ''}`} key={key}>
+                {tentIcons[color]?.pngBase64 ? <img width={72} height={48} alt="" src={`data:image/png;base64,${tentIcons[color]?.pngBase64}`} /> : <span className="resource-placeholder" title={t('ui.originalArtworkUnavailable')}>?</span>}
+                <span>{t(`tents.${key}`)}{player.dirtyTents.includes(color) ? ' *' : ''}</span>
+                <select aria-label={`${colorName(player.color)}: ${t(`tents.${key}`)}`} disabled={busy}
+                  value={player.tentVisits![color] ? 'yes' : 'no'} onChange={e => onTentEdit(player.id, color, e.target.value === 'yes')}>
+                  <option value="no">{t('tents.notVisited')}</option><option value="yes">{t('tents.visited')}</option>
+                </select>
+              </label>)}</div>
+              <button type="button" disabled={busy || !player.tentVisits.some(Boolean)} onClick={() => player.tentVisits!.forEach((visited, color) => { if (visited) onTentEdit(player.id, color, false); })}>{t('tents.clear')}</button>
+            </> : <p className="scope-note">{t('tents.unavailable')}</p>}
+          </section>
           <p className="scope-note">{player.details.mapSize ? `${player.details.mapSize} × ${player.details.mapSize}` : t('ui.unknownDimensions')} · {player.details.levels === 2 ? t('ui.surfaceAndUnderground') : player.details.levels === 1 ? t('ui.surfaceOnly') : t('ui.unknownLevels')}{t('ui.revealedTileCountUnverified')}</p>
           <button type="button" disabled aria-describedby="map-reveal-blocker">{t('ui.revealEntireMap')}</button>
           <p id="map-reveal-blocker" className="scope-note">{t('messages.revealMap')}</p>

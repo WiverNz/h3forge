@@ -60,3 +60,6 @@ pub use resource_icons::ResourceIcons;
 
 mod player_flags;
 pub use player_flags::PlayerFlags;
+
+mod keymaster_icons;
+pub use keymaster_icons::KeymasterIcons;

@@ -474,3 +474,17 @@ interaction transitions stay blocked. Towns remain read-only. Native game-load
 validation remains manual. See
 [H3F-019](issues/019-map-coordinates.md) and the
 [complete byte evidence](formats/SAVEGAME_FORMAT.md#h3f-019-coordinate-movement-evidence).
+
+
+### H3F-028 - Keymaster Tent evidence
+
+Verified: the native Pink/Red pair changes the global red-tent mask `01 -> 81`
+at 4552404; eight masks start at last verified hero end +12+430+109. All eight
+player bits and eight color IDs are supported by the shared layout and current
+save templates. Exact aligned diff: 47 changed bytes plus a 51-byte replay
+insertion, with a 90,987-byte identical suffix. No fog change or separate tent
+counter was found. Original artwork is `H3sprite.lod/AVXkey{0..7}0.def`.
+Design: player-only bit edits, no simulated movement, replay, guard removal or
+ally propagation. Native HotA reload/access checks are still manual. See
+[the format evidence](formats/SAVEGAME_FORMAT.md#h3f-028---keymaster-tent-visits-hota-4411)
+and [H3F-028](issues/028-keymaster-tents.md) for exact offsets, gates and tests.

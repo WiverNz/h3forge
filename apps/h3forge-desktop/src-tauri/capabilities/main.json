@@ -25,6 +25,8 @@
     "allow-list-neutral-armies",
     "allow-apply-neutral-edit",
     "allow-discard-neutral-edits",
+    "allow-apply-tent-edit",
+    "allow-get-keymaster-icon",
     "allow-get-player-flag",
     "allow-get-player-starting-portrait",
     "allow-apply-player-edit",

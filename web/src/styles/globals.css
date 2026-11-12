@@ -511,3 +511,11 @@ footer { padding: 5px 14px; gap: 8px; flex-wrap: wrap; font-size: 11px; }
 .army-grid-compact .army-creature-readonly { grid-column: 1 / -1; font-size: 12px; }
 .army-grid-compact .creature-combobox-trigger, .army-grid-compact .edit-number { height: 28px; min-height: 28px; border-radius: 3px; padding: 2px 5px; }
 .army-grid-compact .creature-option-icon, .army-grid-compact .creature-option-icon .portrait-small { width: 20px; height: 20px; flex-basis: 20px; }
+
+.keymaster-tents { margin-bottom: 16px; }
+.tent-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 16px; margin-bottom: 8px; }
+.tent-row { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 12px; }
+.tent-row img { object-fit: contain; flex: 0 0 72px; }
+.tent-row select { margin-left: auto; max-width: 140px; }
+.tent-dirty { color: var(--accent); }
+@media (max-width: 1050px) { .tent-grid { grid-template-columns: 1fr; } }

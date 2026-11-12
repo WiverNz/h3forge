@@ -34,6 +34,13 @@ fn main() {
     }
     let body = map.body.unwrap();
     println!(
+        "tents {:?}",
+        body.keymaster_tents
+            .iter()
+            .map(|(p, c, s)| (p, c, String::from_utf8_lossy(s)))
+            .collect::<Vec<_>>()
+    );
+    println!(
         "obelisks {:?}; grails {:?}; trailing {}",
         body.obelisks, body.grails, body.trailing_bytes
     );

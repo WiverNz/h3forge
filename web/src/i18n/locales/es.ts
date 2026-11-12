@@ -1,5 +1,21 @@
 import type { Catalog } from '../types';
 export const es = {
+  "tents": {
+    "title": "Tiendas del guardián de las llaves",
+    "visited": "Visitada",
+    "notVisited": "No visitada",
+    "clear": "Borrar visitas de este jugador",
+    "scope": "Visitas solo de {{player}}. Permite el acceso a guardias y puertas del mismo color; no elimina guardias. Los cambios están pendientes de guardar.",
+    "unavailable": "Estado no disponible: la estructura HotA 44/11 no está verificada.",
+    "lightBlue": "Azul claro",
+    "green": "Verde",
+    "red": "Roja",
+    "darkBlue": "Azul oscuro",
+    "brown": "Marrón",
+    "purple": "Morada",
+    "white": "Blanca",
+    "black": "Negra"
+},
   "neutral": {
     "diagnostics": "Avanzado / Diagnóstico",
     "needsEvidence": "Se necesitan más datos del juego.",

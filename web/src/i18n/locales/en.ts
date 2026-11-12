@@ -1,4 +1,20 @@
 export const en = {
+  "tents": {
+    "title": "Keymaster Tents",
+    "visited": "Visited",
+    "notVisited": "Not visited",
+    "clear": "Clear visits for this player",
+    "scope": "Visits for {{player}} only. Grants matching Border Guard/Gate access; does not remove guards. Changes are pending until saved.",
+    "unavailable": "Tent state unavailable: this save does not have a verified HotA 44/11 layout.",
+    "lightBlue": "Light Blue",
+    "green": "Green",
+    "red": "Red",
+    "darkBlue": "Dark Blue",
+    "brown": "Brown",
+    "purple": "Purple",
+    "white": "White",
+    "black": "Black"
+},
   "neutral": {
     "diagnostics": "Advanced / Diagnostics",
     "needsEvidence": "More in-game evidence is needed.",
