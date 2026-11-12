@@ -1338,3 +1338,202 @@ Quantity is a separate checked four-byte patch. Two independent groups pass
 exact-diff and compressed save/reopen tests. Native loading of edited types
 remains a manual validation step. No missing template, army, or object is
 created. Wandering deletion/zeroing, splitting and resurrection are refused.
+
+## H3F-019 coordinate movement evidence
+
+2026-11-12, HotA 44/11, Element Land, 252 x 252 x 2. All offsets below
+are decompressed offsets in the supplied movement saves, not write addresses
+for other saves. Originals were read only; analysis/test copies are ignored.
+
+| Private input | Compressed SHA-256 | Payload length |
+|---|---|---:|
+| `SaAndVla_before_movement.GM2` | `a617ec6293febf02db9ab469c1c960fe07525b5e3632e5777a5861a60aa59d65` | 5,012,342 |
+| `SaAndVla_moandor_left_1.GM2` | `79190fe9f221a07b839b7642618b3394472e7cb1d61af571f829250df502552a` | 5,012,397 |
+| `SaAndVla_nimbus_water_step.GM2` | `5ff56bed7daf260645fcb8073f10a9b882a419a5795a18fe05c61706cfeabd95` | 5,012,409 |
+
+The two after-saves branch independently from the baseline. Moandor (type 66,
+record start 4,381,921) moves (231,52,0) -> (230,52,0). Nimbus (type 75,
+record start 4,392,361) moves (76,41,0) -> (77,42,0). Both biographies are
+empty, so front matter starts at record -26. The existing h3svg reference
+(`.local/research/h3svg_spec.md`, Hero/Tile/Boat/TileVisibility/ReplayEvent)
+supplies structure names, with native differences providing the evidence below.
+
+### Exhaustive changes before replay insertion
+
+Ranges in this table may include unchanged bytes between fields; the regression
+in `tests/sample_coordinates.rs` asserts the exact differing byte indexes.
+No differences outside these ranges precede the insertion at 4,921,359.
+
+| Moandor pair offset | Change | Interpretation |
+|---|---|---|
+| 908-926 | embedded filename | incidental save metadata |
+| 389,550-551 | `02 03 -> 12 22` | destination tile +7 actionable flag, +8 class 3 -> hero 34 |
+| 389,557-560 | `FFFFFFFF -> 42000000` | destination properties -> hero type 66 |
+| 389,576-577 | `12 22 -> 02 03` | source actionable flag cleared, class restored to 3 |
+| 389,583-586 | `42000000 -> FFFFFFFF` | source properties restored |
+| 4,277,472 | `4B -> 42` | Pink selected hero: Nimbus -> Moandor; incidental UI state |
+| 4,381,895; 4,381,902 | `E7 -> E6` | x u16 and duplicated packed x |
+| 4,381,936 | `05 -> 06` | hero +15 facing, left |
+| 4,381,940-947 | (229,50) -> (-1,-1) | hero +19/+23 destination X/Y cleared |
+| 4,381,956 | movement remaining 1760 -> 1685 | hero +35, 75-point step; maximum stays 1760 |
+| 4,382,990 | `00 -> 01` | hero +1069, movement-associated flag; exact semantics unresolved |
+| 4,392,380; 4,392,384 | Nimbus destination (76,39) -> (77,41) | other hero's route changed, position/movement unchanged; incidental to Moandor step, cause unproven |
+| 4,872,060 | replay count 2104 -> 2107 | three appended records |
+
+Moandor's source tile starts at 389,569; destination at 389,543. His
+`object_class_under` remains 3, `has_object_under` 0 and properties FFFFFFFF.
+This establishes passive class-3 restoration; destinations with a different
+underlying class/properties remain excluded. The external ObjectClass enum calls
+3 ANCHOR_POINT, but no actionable anchor interaction is inferred or enabled.
+
+| Nimbus pair offset | Change | Interpretation |
+|---|---|---|
+| 908-928 | embedded filename | incidental save metadata |
+| 308,066-067 | `10 22 -> 00 00` | source tile actionable flag cleared, class hero -> 0 |
+| 308,073 | `4B -> 00` | source properties restored to zero |
+| 314,964-965 | `00 00 -> 10 22` | destination actionable flag set, class -> hero |
+| 314,971 | `00 -> 4B` | destination properties -> hero type 75 |
+| 4,392,335; 4,392,337 | x 76 -> 77, y 41 -> 42 | u16 front-matter coordinates |
+| 4,392,342; 4,392,344 | same x/y change | packed coordinate duplicate |
+| 4,392,376 | `00 -> 03` | hero +15 facing, diagonal down-right |
+| 4,392,380-387 | (76,39) -> (-1,-1) | destination X/Y cleared |
+| 4,392,396 | movement remaining 2500 -> 2359 | hero +35, 141-point step; maximum stays 2500 |
+| 4,393,430 | `00 -> 01` | hero +1069, same unresolved movement-associated flag |
+| 4,577,680 | `7E -> FF` | visibility-like mask, linked to replay event below |
+| 4,872,060 | replay count 2104 -> 2108 | four appended records |
+
+Nimbus's source tile starts at 308,059; destination at 314,957. Both are
+water (terrain byte 8). His underlying class/flag/properties stay zero.
+Visibility masks `7E -> FF` set bits 0 and 7, not just Pink's bit 7.
+The replay names (83,44) and the same masks. If this is the classic two-byte
+z/y/x TileVisibility array, it implies a start of 4,555,338. That is a
+**hypothesis**, not a verified fog boundary or team-sharing rule, and is not
+used for writing. No RNG mutation is established in either pair.
+
+### Replay alignment and unchanged structures
+
+At 4,921,359 the game appends these records (hex), not replacements:
+
+| Pair | Size | Bytes |
+|---|---:|---|
+| Moandor | 22 | `0c071000000008000000420000000500000006000000` |
+| Moandor | 18 | `0c070c000000090000000100000042000000` |
+| Moandor | 15 | `01074200000006e7003400e6003400` |
+| Nimbus | 22 | `0c0710000000080000004b0000000000000003000000` |
+| Nimbus | 18 | `0c070c00000009000000010000004b000000` |
+| Nimbus | 15 | `01074b000000034c0029004d002a00` |
+| Nimbus | 12 | `0b07010053002c007e00ff00` |
+
+Type 12 records carry facing/flag-like updates; type 1 contains hero type,
+facing and old/new x/y. Type 11 corresponds to the visibility-like change.
+Subevent semantics beyond these direct correspondences remain unverified.
+After aligning these 55/67 inserted bytes, the entire 90,983-byte tail is
+identical. There are no additional hidden tail mutations in these pairs.
+
+The tile array starts at 2,263 and walks exactly 127,008 variable-length
+tiles to templates at 3,550,135. Tile render counts/lists do not change.
+All bytes from templates through the end of boats/obelisks (Player[0] at
+4,276,427) are unchanged. All town records and owner/hire tables are unchanged.
+Hero object indexes on the occupied tiles remain FFFF; no separate object-array
+entry moves in these two samples. Do not extrapolate this to towns/objects or
+boarding/disembarking.
+
+The boat table starts at 4,275,482 with 32 records. Nimbus rides boat 30,
+record 4,276,322: exists 1, owner 7, rider 75, boarded 1, visible 0,
+direction 1, stale x/y/z (70,52,0), stale packed coordinates. All 28 bytes
+are identical before and after his water step. His actual position is in
+the hero front matter and current tile occupancy, not these boat coordinates.
+
+### Relocation interpretation and implementation
+
+The initial H3F-019 conclusion that another one-step land pair was required
+was too broad. The existing pairs already establish the current-position and
+occupancy relationships. A native step's full diff is not the desired patch set
+for an editor teleport. The following distinctions control the implementation:
+
+| State | Editor relocation |
+|---|---|
+| Front x/y/z and packed duplicate | update together |
+| Source tile actionable/class/properties | restore from hero's underlying state |
+| Destination tile actionable/class/properties | replace with hero occupancy |
+| Tile subclass/index, render list, terrain | preserve; not copied from source to destination |
+| Hero underlying class/flag/properties | preserve; only matching passive destinations accepted |
+| Destination X/Y | clear to -1/-1, as in both native pairs |
+| Destination Z and next three bytes | preserve; Z does not change in supported moves |
+| Hero +1069 | accept only 0/1, set 1 as in both pairs; exact semantic name still unknown |
+| Facing, movement totals/remaining and land/sea movement words | preserve, explicit editor policy; no path-distance cost |
+| Boat record | preserve unchanged, including stale parked coordinates; no attach/detach |
+| Owner roster, owner table, town links | validate relevant links, preserve |
+| Other-hero route, selected hero, embedded filename | incidental to this hero's relocation, preserve |
+| Fog and replay | preserve by editor policy; no simulated revelation or playback events |
+
+This does not claim that exploration is incidental to native movement: Nimbus's
+fog update is real. It is a separately omitted effect of the editor operation.
+The exact fog-array boundary/sharing rule is still unverified, but no guessed
+fog patch is needed to change position while retaining existing exploration.
+
+**Current passability versus historical objects.** Moandor's before-save contains
+old object 11999 (monster template AVWddrx0.def) and object 14391 (resource template
+avtmerc0.def) at (231,52,0). Their masks would incorrectly block the demonstrated
+move if all object-array entries were assumed active. Neither is in the current
+source/destination render lists. Both live tiles render object 10238, a tree
+sprite AVLSNTR2.def anchored at (233,53,0); their relative sprite tiles are 0x12
+and 0x13 and are passable. Nimbus's destination renders object 11269,
+wt_tvrn01.def anchored at (79,45,0), relative sprite tile 0x32, also passable
+and not actionable there. The tavern entrance elsewhere does not make this
+particular water tile an object visit.
+
+The implementation reuses the bounded full tile/template/object discovery from
+H3F-027. It validates current tile +7: bit 0x01 blocks access, bit 0x10 means
+an actionable tile, bit 0x02 is preserved as the coastal/access flag; unknown
+other access bits refuse relocation. Every current render entry must reference
+an existing object/template at the matching anchor and relative sprite tile;
+template passability (+8..+14) must allow that cell and action mask (+20..+26)
+must not mark it actionable. Occupancy comes from the live tile and other visible
+hero records. Adjacent live monster tiles are refused. This intentionally does
+not reconstruct pathfinding or trigger encounters.
+
+[H3API H3MapItem](https://github.com/RoseKavalier/H3API/blob/master/include/h3api/H3AdventureMap/H3MapItems.hpp)
+corroborates access flags and draw-tile coordinates, and
+[H3Hero supplied by the user](https://github.com/RoseKavalier/H3Plugins/blob/master/H3API/lib/h3api/H3Structures/H3Structures.hpp)
+corroborates separate position, underlying state, destination and movement fields.
+These are classic in-memory layouts, not HotA serialized layouts. Memory
+`objectBelow` is +0xB, `objectTypeUnder` +0xC and setup +0x14; the save front
+stores class +11, boolean +15 and properties +16. Memory destination +0x35/+0x39
+maps conceptually to save-record +19/+23, and memory movement +0x49/+0x4D to
+save-record +31/+35. No pointer, vector or memory offset is used as a save offset.
+The provided header does not establish the identity of HotA save +1069.
+No H3API implementation code was copied.
+
+`SaveDocument::hero_coordinates` requires exact 44/11, high-confidence records,
+a unique length-consistent biography boundary within 8192 bytes, boolean fields,
+visible=1, full u16 X/Y/Z, packed-coordinate agreement and actual map bounds.
+`plan_hero_relocation` adds an owner-roster match, verified town links, unique
+current hero tile, known passive underlying class 0/3 with zero/FFFFFFFF
+properties, observed inactive spell-state prefix, known movement-associated
+byte 0/1, valid terrain and exactly one boarded boat for water heroes.
+It rejects different levels, medium changes, differing underlying state,
+occupied/actionable/guarded/impassable destinations and ambiguous references.
+The inactive prefix at hero +5..+10 must equal FF FF FF 00 FF as in both pairs;
+individual HotA spell subfield names/order are not inferred from the classic
+header. Patrol radius must be FF. Water without a verified boat is refused.
+
+The supported operation is arbitrary distance, not restricted to one tile:
+Moandor (231,52,0) -> (108,77,0) and Nimbus (76,41,0) -> (118,71,0) pass
+save/reopen and return-move exact-byte checks. Returning restores the original
+payload except the intentionally cleared route and +1069. At the native-step
+destinations every patch byte equals the game's byte; the only remaining diffs
+are precisely filename/selection/other-hero route and the explicitly preserved
+facing, movement cost, fog and replay. Negative tests cover coordinate mismatch,
+rock, blocked/actionable tiles, bad render references, unknown movement/spell
+state, missing boarded boat, bounds, levels and occupied heroes.
+
+`HeroEdit::SetCoordinates` flows through pending edits and safe save. Two pending
+moves cannot reserve the same destination; occupied sources cannot be pending
+destinations, so swaps/chains are unsupported. Relocation and dismissal of the
+same hero conflict in both orders. Original saves and H3M remain untouched.
+Native HotA load/move/end-turn validation remains manual, not claimed by the
+parser round trips. Cross-level, boarding/landing, town/object interactions and
+changes of underlying shape stay disabled. No repeat one-step experiment is
+requested; a boarding pair would provide new medium/boat-attachment information
+only when that separate scope is pursued. See [H3F-019](../issues/019-map-coordinates.md).

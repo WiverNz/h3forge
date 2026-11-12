@@ -596,6 +596,8 @@ pub struct HeroNoteDto {
 #[serde(rename_all = "camelCase")]
 pub struct HeroDetailDto {
     pub id: usize,
+    /// Current save position, not the original H3M position. No write support.
+    pub coordinates: Option<[u16; 3]>,
     pub span_start: usize,
     pub span_end: usize,
     pub name: TextDto,
@@ -639,6 +641,7 @@ impl HeroDetailDto {
         };
         HeroDetailDto {
             id: hero.id,
+            coordinates: None,
             span_start: hero.span.start,
             span_end: hero.span.end,
             name: TextDto::new(&hero.name_raw, &hero.name_lossy),
@@ -910,6 +913,7 @@ pub struct SpellToggleDto {
 #[derive(Debug, Default, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct HeroEditRequestDto {
+    pub coordinates: Option<[u16; 3]>,
     pub attack: Option<u8>,
     pub defense: Option<u8>,
     pub spell_power: Option<u8>,
@@ -1215,6 +1219,9 @@ impl HeroEditRequestDto {
     pub fn to_edits(&self) -> Vec<h3forge_save::HeroEdit> {
         use h3forge_save::HeroEdit as Edit;
         let mut edits = Vec::new();
+        if let Some(value) = self.coordinates {
+            edits.push(Edit::SetCoordinates(value));
+        }
         if let Some(value) = self.attack {
             edits.push(Edit::SetAttack(value));
         }
@@ -1298,6 +1305,9 @@ impl HeroEditRequestDto {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HeroEditResponseDto {
+    pub coordinates: Option<[u16; 3]>,
+    #[serde(serialize_with = "crate::localization::serialize_read_only")]
+    pub coordinates_read_only_reason: Option<String>,
     pub id: usize,
     pub editable: bool,
     #[serde(serialize_with = "crate::localization::serialize_read_only")]

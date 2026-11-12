@@ -12,6 +12,7 @@
 
 pub mod artifacts;
 mod container;
+mod coordinates;
 pub mod creatures;
 pub mod definitions;
 mod detect;

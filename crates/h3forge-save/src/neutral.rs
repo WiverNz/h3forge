@@ -48,11 +48,11 @@ fn dword(p: &[u8], a: usize) -> Option<u32> {
 
 /// Current object anchor, class, subtype and template action mask.
 type ObjectEntry = ([u8; 3], u16, u16, [u8; 6]);
-struct ObjectTable {
-    objects: Vec<ObjectEntry>,
-    start: usize,
+pub(crate) struct ObjectTable {
+    pub(crate) objects: Vec<ObjectEntry>,
+    pub(crate) start: usize,
     /// Full names and fixed template bytes, retained for compatible replacement.
-    templates: Vec<(Vec<u8>, [u8; 33])>,
+    pub(crate) templates: Vec<(Vec<u8>, [u8; 33])>,
 }
 
 /// Validate the complete template/object arrays, not just a .def signature.
@@ -104,7 +104,7 @@ fn object_table(p: &[u8], start: usize) -> Option<ObjectTable> {
     })
 }
 
-fn discover(doc: &SaveDocument) -> Result<Vec<NeutralArmy>, String> {
+pub(crate) fn current_map(doc: &SaveDocument) -> Result<(Vec<usize>, ObjectTable), String> {
     if !doc.format.army_edit_supported() {
         return Err("Current map armies require HotA 44/11.".into());
     }
@@ -175,9 +175,22 @@ fn discover(doc: &SaveDocument) -> Result<Vec<NeutralArmy>, String> {
     }
     let (mut at, objects) =
         found.ok_or("Current map tile and object arrays could not be verified.")?;
+    let mut tiles = Vec::with_capacity(total);
+    for _ in 0..total {
+        tiles.push(at);
+        let render = dword(p, at + 18).ok_or("Truncated tile.")? as usize;
+        at += 22 + render * 4;
+    }
+    Ok((tiles, objects))
+}
+
+fn discover(doc: &SaveDocument) -> Result<Vec<NeutralArmy>, String> {
+    let (tiles, objects) = current_map(doc)?;
+    let size = doc.map.size.unwrap_or(0) as usize;
+    let p = doc.payload();
     let mut groups = Vec::new();
     let mut seen = std::collections::BTreeSet::new();
-    for index in 0..total {
+    for (index, &at) in tiles.iter().enumerate() {
         let class = word(p, at + 8).ok_or("Truncated map tile.")?;
         if p[at + 7] & 0x10 != 0 && matches!(class, 54 | 33 | 219) {
             let id = word(p, at + 12).ok_or("Missing map object index.")? as usize;
@@ -224,7 +237,6 @@ fn discover(doc: &SaveDocument) -> Result<Vec<NeutralArmy>, String> {
                 } else { "The current garrison army table could not be verified." }.into()),
             });
         }
-        at += 22 + dword(p, at + 18).ok_or("Truncated render list.")? as usize * 4;
     }
     let garrisons: Vec<usize> = groups
         .iter()

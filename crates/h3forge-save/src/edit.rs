@@ -49,6 +49,8 @@ const LEVEL_MAX: u8 = 74;
 /// is idempotent.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum HeroEdit {
+    /// Same-level editor relocation to a validated passive tile.
+    SetCoordinates([u16; 3]),
     /// Attack primary attribute, HotA game-valid range 0-99.
     SetAttack(u8),
     /// Defense primary attribute, HotA game-valid range 0-99.
@@ -172,6 +174,9 @@ impl crate::SaveDocument {
 
         for edit in edits {
             match edit {
+                HeroEdit::SetCoordinates(to) => {
+                    patches.extend(self.plan_hero_relocation(hero_id, *to)?)
+                }
                 HeroEdit::SetArmySlot {
                     slot,
                     creature_id,

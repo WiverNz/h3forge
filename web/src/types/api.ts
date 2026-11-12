@@ -108,6 +108,8 @@ export interface HeroNoteDto {
 }
 
 export interface HeroDetailDto {
+  /** Current save coordinates; null for an unverified or off-map position. */
+  coordinates: [number, number, number] | null;
   id: number;
   spanStart: number;
   spanEnd: number;
@@ -200,6 +202,7 @@ export interface EquipmentSlotDto {
 }
 
 export interface HeroEditRequest {
+  coordinates?: [number, number, number];
   backpackSlot?: { slot: number; item: BackpackEdit };
   backpackDestination?: { slot: number; item: BackpackEdit };
   equipmentSlot?: { slot: number; item: { kind: 'empty' } | { kind: 'artifact'; value: number } };
@@ -219,6 +222,8 @@ export interface HeroEditRequest {
 }
 
 export interface HeroEditResponseDto {
+  coordinates: [number, number, number] | null;
+  coordinatesReadOnlyReason: ReasonDescriptor | null;
   id: number;
   editable: boolean;
   readOnlyReason: ReasonDescriptor | null;

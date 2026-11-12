@@ -13,6 +13,7 @@ import type {
 import { decodeText, toHex, type LegacyEncoding } from '../lib/legacyText';
 import { getHeroPortrait } from '../api/resources';
 import { ArmyEditor } from './ArmyEditor';
+import { CoordinatesEditor } from './CoordinatesEditor';
 import { Portrait } from './Portrait';
 import { BackpackEditor } from './BackpackEditor';
 import { EquipmentEditor } from './EquipmentEditor';
@@ -244,6 +245,9 @@ export function HeroDetail({
         hidden={tab !== 'general'}
         className="detail-tab"
       >
+        <CoordinatesEditor key={hero.id} value={current?.coordinates ?? hero.coordinates}
+          blocked={current?.coordinatesReadOnlyReason ?? (!editable || !current ? { code: 'read-only', details: t('ui.heroRelocationBlocked') } : null)}
+          dirty={dirty.has('Coordinates')} onApply={coordinates => onApplyEdit({ coordinates })} />
         {editable ? (
           <dl className="facts facts-editable general-grid">
             <div className="general-group-title"><dt>{t('ui.progressionMagic')}</dt></div>

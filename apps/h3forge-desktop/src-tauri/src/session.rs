@@ -143,6 +143,7 @@ impl TownFieldKey {
 /// Identifies one editable field of one hero record.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 enum FieldKey {
+    Coordinates,
     Attack,
     Defense,
     SpellPower,
@@ -160,6 +161,7 @@ enum FieldKey {
 impl FieldKey {
     fn of(edit: &HeroEdit) -> FieldKey {
         match edit {
+            HeroEdit::SetCoordinates(_) => FieldKey::Coordinates,
             HeroEdit::SetArmySlot { slot, .. } => FieldKey::Army(*slot),
             HeroEdit::SetAttack(_) => FieldKey::Attack,
             HeroEdit::SetDefense(_) => FieldKey::Defense,
@@ -177,6 +179,7 @@ impl FieldKey {
 
     fn label(&self) -> String {
         match self {
+            FieldKey::Coordinates => "Coordinates".into(),
             FieldKey::Army(slot) => format!("Army slot {}", slot + 1),
             FieldKey::Attack => "Attack".into(),
             FieldKey::Defense => "Defense".into(),
@@ -472,6 +475,7 @@ impl AppState {
             .get(id)
             .ok_or_else(|| AppErrorDto::hero_not_found(id))?;
         let mut detail = HeroDetailDto::from_view(hero);
+        detail.coordinates = session.document.hero_coordinates(id);
         detail.map = session
             .map_link
             .as_ref()
@@ -546,6 +550,7 @@ impl AppState {
             }
             let key = FieldKey::of(&edit);
             let equals_base = match &edit {
+                HeroEdit::SetCoordinates(to) => session.document.hero_coordinates(id) == Some(*to),
                 HeroEdit::SetArmySlot { .. } => edit_plan.is_empty(),
                 HeroEdit::SetAttack(v) => *v == hero.primary.attack,
                 HeroEdit::SetDefense(v) => *v == hero.primary.defense,
@@ -595,6 +600,27 @@ impl AppState {
         }
         // Validate the merged set by planning it against the source payload.
         let planned: Vec<HeroEdit> = hero_pending.values().cloned().collect();
+        if let Some(HeroEdit::SetCoordinates(to)) = hero_pending.get(&FieldKey::Coordinates) {
+            if session.pending_dismissals.contains(&id) {
+                return Err(AppErrorDto::edit_failed(
+                    h3forge_save::EditError::InvalidValue {
+                        field: "coordinates",
+                        reason: "Keep the hero before relocating it.".into(),
+                    },
+                ));
+            }
+            if session.pending.iter().any(|(&other, edits)| {
+                other != id
+                    && edits.get(&FieldKey::Coordinates) == Some(&HeroEdit::SetCoordinates(*to))
+            }) {
+                return Err(AppErrorDto::edit_failed(
+                    h3forge_save::EditError::InvalidValue {
+                        field: "coordinates",
+                        reason: "Another pending hero relocation occupies this destination.".into(),
+                    },
+                ));
+            }
+        }
         let hero_patches = session
             .document
             .plan_hero_edits(id, &planned)
@@ -626,6 +652,18 @@ impl AppState {
             .as_mut()
             .ok_or_else(AppErrorDto::no_open_save)?;
         if dismissed {
+            if session
+                .pending
+                .get(&id)
+                .is_some_and(|edits| edits.contains_key(&FieldKey::Coordinates))
+            {
+                return Err(AppErrorDto::edit_failed(
+                    h3forge_save::EditError::InvalidValue {
+                        field: "coordinates",
+                        reason: "Revert the hero relocation before dismissing it.".into(),
+                    },
+                ));
+            }
             let mut ids: Vec<usize> = session.pending_dismissals.iter().copied().collect();
             if !ids.contains(&id) {
                 ids.push(id);
@@ -677,7 +715,20 @@ impl AppState {
         for (&hero_id, edits) in &session.pending {
             let hero = &session.document.heroes[hero_id];
             for (key, edit) in edits {
-                let (before, after) = edit_display(edit.clone(), hero);
+                let (before, after) = if let HeroEdit::SetCoordinates(to) = edit {
+                    (
+                        format!(
+                            "{:?}",
+                            session
+                                .document
+                                .hero_coordinates(hero_id)
+                                .unwrap_or_default()
+                        ),
+                        format!("{to:?}"),
+                    )
+                } else {
+                    edit_display(edit.clone(), hero)
+                };
                 out.push(PendingEditDto {
                     record_kind: "hero",
                     record_id: hero_id,
@@ -2396,6 +2447,15 @@ fn hero_edit_response(
         })
     };
     Ok(HeroEditResponseDto {
+        coordinates: match pending.and_then(|p| p.get(&FieldKey::Coordinates)) {
+            Some(HeroEdit::SetCoordinates(to)) => Some(*to),
+            _ => session.document.hero_coordinates(id),
+        },
+        coordinates_read_only_reason: if dismissal_pending {
+            Some("Keep the hero before relocating it.".into())
+        } else {
+            session.document.hero_relocation_blocker(id)
+        },
         id,
         editable,
         read_only_reason,
@@ -2432,6 +2492,7 @@ fn hero_edit_response(
 /// Display pair (before, after) for one pending edit against the base view.
 fn edit_display(edit: HeroEdit, hero: &HeroView) -> (String, String) {
     match edit {
+        HeroEdit::SetCoordinates(to) => ("Current position".into(), format!("{to:?}")),
         HeroEdit::SetArmySlot {
             slot,
             creature_id,

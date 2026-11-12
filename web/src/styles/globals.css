@@ -33,6 +33,10 @@ footer { border-top: 1px solid var(--border); }
 
 /* Read-only save overview (H3F-003). */
 .header-actions { display: flex; align-items: center; gap: 16px; }
+.hero-coordinates { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; padding: 6px 8px; border: 1px solid var(--border); font-size: 11px; }
+.hero-coordinates label { display: flex; align-items: center; gap: 4px; }
+.hero-coordinates input { width: 54px; }
+.hero-coordinates small { flex-basis: 100%; color: var(--muted); }
 .language-settings { position: relative; font-size: 12px; }
 .language-settings summary { cursor: pointer; padding: 6px; }
 .language-settings[open] { position: absolute; z-index: 100; right: 16px; top: 8px; width: min(360px, calc(100vw - 32px)); padding: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; box-shadow: 0 8px 24px #0008; }

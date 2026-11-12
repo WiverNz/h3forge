@@ -450,3 +450,27 @@ See [H3F-027](issues/027-neutral-creatures.md) for sources and verification,
 and [current map armies](formats/SAVEGAME_FORMAT.md#h3f-027-current-map-armies)
 for verified offsets and conservative gates. No upstream code or artwork
 was copied for this issue.
+
+## H3F-019 movement evidence (2026-11-12)
+
+The three supplied movement saves are independent before/land-step/water-step
+branches. Exact decompressed diffs establish hero front-matter coordinates,
+tile occupancy, facing, destination cancellation, movement remaining and an
+unresolved movement-associated byte (+1069). Moandor's underlying class is 3,
+and his save also changes Nimbus's route. Nimbus's boarded boat stays byte-identical
+with stale coordinates; his step changes a visibility-like mask and adds a
+matching replay event. Replay insertions are 55/67 bytes, with identical aligned
+tails. No RNG change is established. Templates, objects, boats and towns stay
+unchanged in both steps. These observations do not prove arbitrary relocation.
+
+Follow-up analysis withdrew the repeated land-step request. The supplied pairs
+already establish passive occupancy restoration, while facing/cost/fog/replay
+are distinct native-step effects. H3API corroborates the concepts, not save
+offsets. Current tile/render references distinguish active objects from stale
+monster/resource entries. Arbitrary-distance same-level/medium relocation is
+implemented for matching passive destination shapes, preserving movement points,
+facing and exploration as explicit editor policy. Cross-level and attachment/
+interaction transitions stay blocked. Towns remain read-only. Native game-load
+validation remains manual. See
+[H3F-019](issues/019-map-coordinates.md) and the
+[complete byte evidence](formats/SAVEGAME_FORMAT.md#h3f-019-coordinate-movement-evidence).

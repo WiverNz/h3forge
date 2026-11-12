@@ -24,7 +24,7 @@ Priorities: P0 proves/completes the MVP; P1 expands/polishes the supported produ
 | H3F-016 | [Polish save browsing and the desktop editing experience](016-desktop-ux.md) | M5 | P1 | 005, 008, 009 |
 | H3F-017 | [Portable Windows EXE and tag-release CI (implemented; manual release gates open)](017-windows-release.md) | M5 | P1 | 009, 016; 024 before final release |
 | H3F-018 | [Edit player resources and gold (complete)](018-player-resources.md) | M4 | P1 | 008 |
-| H3F-019 | [Read-only hero and town coordinates, gated map-position edits](019-map-coordinates.md) | M4 | P1 | 013 |
+| H3F-019 | [Hero and Town Coordinates (constrained relocation implemented)](019-map-coordinates.md) | M4 | P1 | 008, 013, 021 |
 
 | H3F-020 | [Make the existing desktop editor practical and compact](020-desktop-ui-usability.md) | UI follow-up | P0 | 005, 008 |
 | H3F-021 | [Map discovery and H3M integration](021-map-discovery.md) | M4 | P1 | 003, 005 |
@@ -40,7 +40,7 @@ H3F-005 has an explicit portrait-mapping evidence gate; placeholders are accepta
 
 Use [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md) for milestone definitions and [RESEARCH.md](../RESEARCH.md) for the inspection baseline. The self-contained binary-format references live in [SAVEGAME_FORMAT.md](../formats/SAVEGAME_FORMAT.md), [GAME_RESOURCES_FORMAT.md](../formats/GAME_RESOURCES_FORMAT.md) and [MAP_FORMAT.md](../formats/MAP_FORMAT.md). After an issue, record the focused verification result and any changed compatibility claim; do not rerun entire upstream suites.
 
-H3F-018 is implemented and sample-verified. H3F-023 is partially complete: compact Resources/General/Exploration tabs, conservative current status, verified-slot resource editing, player details/artwork and read-only obelisk visits are implemented; both revelation actions remain disabled with documented structural blockers. H3F-019 was not started.
+H3F-018 is implemented and sample-verified. H3F-023 is partially complete: compact Resources/General/Exploration tabs, conservative current status, verified-slot resource editing, player details/artwork and read-only obelisk visits are implemented; both revelation actions remain disabled with documented structural blockers. H3F-019 implements arbitrary-distance hero relocation on the same level/medium to validated matching passive tiles, with compact inputs and pending/Revert/Discard/Save integration. Movement points, facing and exploration are preserved by editor policy. Towns remain read-only. Cross-level moves, boarding/landing and object interactions stay disabled; native game-load validation remains manual. The repeated plain-land pair request was withdrawn after deeper analysis of the existing saves.
 
 H3F-025 implements FlightTrace-style light/dark/system themes in Settings with persistence and four-language labels. Production build, 25 frontend tests and localized rendering pass; native visual/relaunch smoke remains pending.
 

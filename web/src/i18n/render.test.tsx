@@ -5,6 +5,7 @@ import { App } from '../App';
 import { ArmyEditor } from '../components/ArmyEditor';
 import { PlayersPanel } from '../components/PlayersPanel';
 import { TownBuildings } from '../components/TownBuildings';
+import { CoordinatesEditor } from '../components/CoordinatesEditor';
 import { Feedback } from './Feedback';
 import { ReasonText } from './reasons';
 import { i18n, t } from './index';
@@ -39,13 +40,23 @@ test('four-language shell, editor and error rendering keeps identities, classes 
     assert.ok(players.includes('id="player-Resources"'));
     assert.ok(players.includes(t('common.resources')));
     const town = renderToStaticMarkup(<TownBuildings buildings={null} onApplyEdit={() => {}} />);
+    const coordinates = renderToStaticMarkup(<CoordinatesEditor value={[230,52,0]} blocked={null} dirty
+      onApply={() => { throw new Error('render must not edit'); }} />);
+    assert.ok(coordinates.includes(t('ui.applyCoordinates')));
+    assert.ok(coordinates.includes(t('ui.heroRelocationPolicy')));
+    assert.ok(coordinates.includes('value="230"'));
+    assert.ok(coordinates.includes('readOnly=""'));
+    assert.ok(!coordinates.includes('<fieldset class="hero-coordinates field-dirty" disabled'));
+    const blockedCoordinates=renderToStaticMarkup(<CoordinatesEditor value={null}
+      blocked={{code:'read-only',details:'Unsupported position'}} dirty={false} onApply={() => {}} />);
+    assert.ok(blockedCoordinates.includes('disabled=""'));
     assert.ok(town.includes(t('ui.buildingStateIsDecodedOnlyForHota4411')));
     const feedback = renderToStaticMarkup(<Feedback message={{ savedFile: '<Custom & Иван>' }} />);
     assert.ok(feedback.includes('&lt;Custom &amp; Иван&gt;'));
     const reason = renderToStaticMarkup(<ReasonText reason={{ code: 'read-only', details: '<unknown bytes>' }} />);
     assert.ok(reason.includes(t('ui.readOnly')));
     assert.ok(reason.includes('&lt;unknown bytes&gt;'));
-    for (const html of [shell, army, players, town, feedback, reason]) {
+    for (const html of [shell, army, players, town, feedback, reason, coordinates, blockedCoordinates]) {
       assert.ok(!html.includes('[object Object]'));
       assert.ok(!html.includes('{{'));
       assert.ok(!html.includes('ui.'));
