@@ -9,7 +9,7 @@ members = [
 default-members = ["crates/h3forge-save", "crates/h3forge-resources", "crates/h3forge-map"]
 
 [workspace.package]
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 rust-version = "1.99.1"
 license = "MIT"
