@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="preview.png" alt="H3Forge 0.1.7 native Windows app: hero army editor with sorting and filtering" />
+  <img src="preview.png" alt="H3Forge preview" />
 </p>
 
 # H3Forge
@@ -40,13 +40,15 @@ Actual screenshots from the native Windows app **0.1.7**, captured on **2026-11-
 
 ### Heroes and armies
 
-The opening screenshot shows Moandor's seven army slots and the owned-hero list with Sort and Filter controls. Attributes, spells, skills and artifacts have their own tabs. General also offers constrained relocation and dismissal where verified.
+Browse Moandor's seven army slots and the owned-hero list with Sort and Filter controls. Attributes, spells, skills and artifacts have their own tabs. General also offers constrained relocation and dismissal where verified.
+
+![Hero army editor with seven populated stacks and the owned-hero list](docs/screenshots/hero-army.png)
 
 ### Town buildings
 
 See what is built, what can be built and which structures remain locked.
 
-![Winter Palace building editor showing halls, fortifications, Mage Guild levels and locked creature dwellings](docs/screenshots/town-buildings.png)
+![Winter Palace building editor showing halls, fortifications, Mage Guild levels and economy buildings](docs/screenshots/town-buildings.png)
 
 ### Mage Guild spells
 
