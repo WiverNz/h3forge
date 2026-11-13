@@ -42,8 +42,9 @@ their availability and is not claimed as verified.
   clearing facets and quick filters (category to All), preserving search and sort.
   No Apply, Reset list or duplicate external Clear filters action. Dismissing by
   outside click, Escape or the Filter toggle preserves the chosen filters.
-- Popups align to the list, at most 256px wide and 360px high, with scrollable
-  options. Details remain visible and the list below still shows live results.
+- Popups open 8px to the right of the list, at most 256px wide and 360px high,
+  with scrollable options, leaving list rows visible. Position is clamped to the
+  viewport on narrow windows.
 - Retain selected ID and detail/editor when filtered out. Show a small
   "Selection hidden by filters" notice without an extra action; never auto-select
   another record or inject hidden rows into results. Initial selection and
@@ -185,8 +186,8 @@ stage. Removed Reset list and the external clear button; localized Clear all is
 small and secondary inside the popup. Clearing also resets Owned only, Hero
 inside and category/map-level filters, without changing search, selected record,
 sort direction or pending savegame edits. Closing preserves all active filters.
-The badge reflects active filters only, not search. Popup positioning/size keeps
-it over the list rather than the details panel.
+The badge reflects active filters only, not search. The subsequent positioning
+follow-up below moves the compact popup to the right of the list.
 
 Follow-up verification:
 - Focused list logic/catalog tests: 11 passed; localized UI rendering: 2 passed.
@@ -199,3 +200,13 @@ Follow-up verification:
   languages and both themes at 1280x720. Generated screenshot visually reviewed.
 - One final `npm.cmd --prefix web --cache .local/npm-cache run build`: passed.
   Native manual gates above are unchanged. No unrelated functionality changed.
+
+
+### Popup positioning follow-up
+
+Moved the shared popup 8px to the right of the list, so Heroes, Towns, Players
+and Creatures rows remain visible during instant filtering. Narrow windows keep
+viewport clamping. Filter behavior and compact dimensions are unchanged.
+The browser suite now asserts right-side placement for all four lists, four
+languages and both themes at 1280x720: 366 assertions passed, zero native writes.
+One frontend build passed; native manual checks remain unchanged.

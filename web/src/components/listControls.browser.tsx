@@ -151,7 +151,7 @@ async function run() {
         check(panel.left >= 0 && panel.right <= innerWidth && panel.bottom <= innerHeight, `${section}/${language}/${theme} popover fits`);
         check(find('.hero-rows').getBoundingClientRect().height > 200, `${section} retains list space`);
         check(panel.width <= 256 && panel.height <= 360, 'Popup remains compact');
-        check(panel.right <= find('.hero-list').getBoundingClientRect().right, 'Popup stays over list, leaving details visible');
+        check(panel.left >= find('.hero-list').getBoundingClientRect().right + 8, 'Popup opens to the right without covering list rows');
         check(find('.list-filter-popover').querySelectorAll('button').length === 1, 'Only Clear all action in popup');
         check(!document.querySelector('.list-filter-summary button'), 'No duplicate external clear action');
         check(document.documentElement.scrollWidth <= innerWidth, 'No horizontal viewport overflow');

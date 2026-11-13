@@ -61,7 +61,7 @@ export function ListControls({ sort, onSort, options, active, onClear, hidden, c
     const listRect = button.current?.closest('.hero-list')?.getBoundingClientRect();
     const width = Math.min(256, (listRect?.width ?? 272) - 16, window.innerWidth - 16);
     element.style.width = `${width}px`;
-    element.style.left = `${Math.max(8, Math.min((listRect?.left ?? rect.left) + 4, window.innerWidth - width - 8))}px`;
+    element.style.left = `${Math.max(8, Math.min((listRect?.right ?? rect.right) + 8, window.innerWidth - width - 8))}px`;
     element.style.top = `${Math.min(rect.bottom + 4, window.innerHeight - 180)}px`;
     element.style.maxHeight = `${Math.min(360, Math.max(150, window.innerHeight - rect.bottom - 12))}px`;
     element.togglePopover();
