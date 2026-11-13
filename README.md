@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="preview.png" alt="H3Forge preview" />
+  <img src="preview.png" alt="H3Forge 0.1.7 native Windows app: hero army editor with sorting and filtering" />
 </p>
 
 # H3Forge
 
-**Your heroes, towns and armies. Your next adventure.**
+**Your heroes, towns, players and creatures. Your next adventure.**
 
-H3Forge is a portable Windows save editor for **Heroes of Might and Magic III / Horn of the Abyss**. Browse your save, adjust supported hero, town and player values, and save your changes with automatic backups.
+H3Forge is a portable Windows save editor for **Heroes of Might and Magic III / Horn of the Abyss**. Browse your save, adjust supported heroes, towns, player resources and map armies, and save your changes with automatic backups.
 
 ## [Download Latest Version](https://github.com/WiverNz/h3forge/releases/latest/download/H3Forge.exe)
 
@@ -22,43 +22,55 @@ The direct download requires a published release containing `H3Forge.exe`; it be
 
 | Area | Available on supported saves | Partial or read-only |
 |---|---|---|
-| **Heroes** | Edit primary attributes, experience and level, spell points, learned spells, secondary skills, army stacks, backpack artifacts and supported equipment. | Movement is read-only. Combination artifacts, some equipment/scroll interactions and unknown items remain restricted. |
+| **Heroes** | Edit primary attributes, experience and level, spell points, learned spells, secondary skills, army stacks, backpack artifacts and supported equipment. Relocate or dismiss heroes in verified cases. | Movement points are read-only. Relocation requires a validated destination on the same level and land/water medium. Dismissal, equipment and unknown items have operation-specific restrictions. |
 | **Towns** | Inspect towns, edit supported garrisons, change verified buildings and edit Mage Guild spells. A garrisoned hero's army can be edited as the town garrison. | Building support is partial. Fort, Citadel, Castle, Capitol, grail and structures with unverified saved state stay locked. Coordinates are read-only. |
-| **Players** | Edit gold and all six other resources for verified active players; browse player, hero and town information. | General information is read-only. Map setup is distinguished from current save state; alliance changes and map revelation are not implemented. |
+| **Players** | Edit gold and all six other resources for verified active players; change Keymaster Tent visit flags for each player and tent color; browse player, hero and town information. | General information and obelisk visits are read-only. Map setup is distinguished from current save state; alliance changes and map revelation are not implemented. |
+| **Creatures** | Browse current wandering groups and map garrisons. Edit verified quantities, compatible wandering creature types and supported seven-slot garrison armies. | Other guarded objects and ambiguous records remain unsupported. Original map data is reference-only, not a substitute for current save state. |
 
 - **The look of Heroes III:** portraits, creatures, artifacts, spells and town artwork load from your own game installation. No game archives or extracted artwork are bundled.
 - **Save your way:** use **Save** or **Save As**, with automatic backups and verification before the result replaces a file. Changes stay pending until you save.
 - **Automatic map discovery:** finds and matches local map files to enrich hero, town and player information. You can choose a map manually when needed; this is not a map editor.
 - **Four interface languages:** English, Russian, German and Spanish, selectable in **Settings**. Original save names and some game catalogs retain their original language.
 - **Light, dark or system theme:** choose the appearance in Settings.
+- **Find things quickly:** consistent ascending/descending sorting and instant filters across all four lists, including multi-select owner colors and locale-aware names. Combine filters with available search, see filtered totals, and clear filters without resetting search or sorting. Sort preferences persist; selections and pending edits survive list changes.
 
 ## See it in action
 
-Actual screenshots from the Windows application, using the English interface and a copy of a sample save. Game artwork is read from the local installation. Locked controls remain visible where an operation is unsupported.
+Actual screenshots from the native Windows app **0.1.7**, captured on **2026-11-13** with the English interface, dark theme and a disposable copy of the current sample save. Game artwork is read from the local installation. Locked controls remain visible where an operation is unsupported. [Capture details](docs/screenshots/README.md).
 
 ### Heroes and armies
 
-Browse owned heroes and edit each army slot. Attributes, spells, skills and artifacts have their own tabs.
-
-![Hero army editor showing seven populated creature stacks and the owned-hero list](docs/screenshots/hero-army.png)
+The opening screenshot shows Moandor's seven army slots and the owned-hero list with Sort and Filter controls. Attributes, spells, skills and artifacts have their own tabs. General also offers constrained relocation and dismissal where verified.
 
 ### Town buildings
 
 See what is built, what can be built and which structures remain locked.
 
-![Town building editor showing Corral's halls, fortifications and Mage Guild levels](docs/screenshots/town-buildings.png)
+![Winter Palace building editor showing halls, fortifications, Mage Guild levels and locked creature dwellings](docs/screenshots/town-buildings.png)
 
 ### Mage Guild spells
 
 Inspect and edit the spell lists for each supported guild level.
 
-![Corral's Mage Guild editor with populated spell lists for levels one through five](docs/screenshots/town-mage-guild.png)
+![Winter Palace Mage Guild showing built levels one and two and stored spells for unbuilt higher levels](docs/screenshots/town-mage-guild.png)
 
 ### Players and resources
 
 View player status and map information alongside editable resource totals.
 
 ![Player resources editor showing gold, wood, ore, mercury, sulfur, crystal and gems](docs/screenshots/player-resources.png)
+
+### Keymaster Tent visits
+
+Inspect and change each player's visits to all eight tent colors. Map and puzzle revelation remain disabled.
+
+![Red player's Keymaster Tent visit flags in the Exploration tab](docs/screenshots/player-tents.png)
+
+### Creatures and map garrisons
+
+Browse current groups by creature, quantity or coordinates. Filter by owner, creature type, category and map level. The compact filter menu opens beside the list so results stay visible.
+
+![Creatures editor showing current wandering groups and a compact filter popup to the right of the list](docs/screenshots/creatures.png)
 
 ## Download, copy, play
 
@@ -78,7 +90,7 @@ Keep the original save and its backups until you have checked the edited result 
 The current editable format is the **verified HotA 44/11 save layout**. This is a save-format identifier, not a claim that every Heroes III or HotA release is supported. H3Forge checks individual records and operations before allowing edits; recognizing a save does not automatically make it editable.
 
 - Other layouts, ambiguous records and unknown values may be readable but remain unsupported for editing. There is no blanket editing guarantee for Restoration of Erathia, Armageddon's Blade, Shadow of Death or other HotA layouts.
-- Some buildings and equipment operations remain restricted, as described above. Player details are informational; moving heroes/towns and revealing the map are not implemented.
+- Some buildings, equipment, dismissal and map-army operations remain restricted, as described above. Hero relocation is constrained; town relocation, cross-level hero moves, boarding/landing and map revelation are not supported.
 - Missing or unsupported game resources can produce placeholders. Some extended hero portrait assignments are inferred; LZMA-compressed HotA resources are not supported.
 - Native clean-machine Windows 10/11 checks, human translation review and matching-game load checks remain release gates. A successful save/reopen check is not proof of in-game compatibility.
 
