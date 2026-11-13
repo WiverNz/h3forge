@@ -119,3 +119,38 @@ requires a separate specific native experiment, not guessed offsets.
 
 Verified details: [SAVEGAME_FORMAT.md](../formats/SAVEGAME_FORMAT.md#h3f-027-current-map-armies)
 and [MAP_FORMAT.md](../formats/MAP_FORMAT.md#h3f-027-initial-map-armies).
+
+
+## Later-save discovery fix (2026-11-13)
+
+Fixed the reported empty Creatures list in the current `SaAndVla.GM2`. The
+length-only tile scan found both a real tile start (2,253) and a false header
+start (1,277), then refused the map as ambiguous. Every candidate tile now also
+validates its rendered object index, anchor, level and relative sprite byte.
+The real walk passes; the false walk fails. No hardcoded filename/start, relaxed
+ambiguity rule, frontend change or new save-edit operation was introduced.
+See [format evidence](../formats/SAVEGAME_FORMAT.md) for exact metadata/hashes.
+
+The supplied earlier `SaAndVla_red_tent_before.GM2` exposes 1,119 wandering
+groups + 46 garrisons; the current later save exposes 469 + 46, all with current
+armies. The older 291 + 47 totals above belong to the original H3F-027 fixture,
+not these replacement files. Counts are not inferred from the authored H3M.
+
+Verification (absolute `H3FORGE_FIXTURE_ROOT=D:/Projects/h3forge/games`):
+- `cargo test -p h3forge-save --lib neutral::tests -- --nocapture`: 2 passed.
+  Render-coordinate/index/level/truncation refusal and bounded template parsing.
+- `cargo test -p h3forge-save --test sample_neutral_later -- --nocapture`: 1 passed,
+  neither fixture skipped. Both generations load; garrison and wandering count
+  edits change only one planned 4-byte field, reopen correctly, and a corrupted
+  render index refuses discovery. Source bytes remain unchanged. Initial test
+  expectations were corrected to the observed 46 garrisons rather than assuming
+  the original fixture's 47; no parser gate was relaxed to satisfy those counts.
+- `cargo test -p h3forge-desktop --test neutral_later_flow -- --nocapture`: 1 passed.
+  Actual application list command returns 515 groups, pending edit/Revert/Save As
+  and reopen work on copies; source copy and original remain byte-identical.
+- `cargo test -p h3forge-save --lib keymaster -- --nocapture`: 1 passed, no skip; shared current-map discovery still resolves the supplied tent fixture.
+- `cargo check --workspace`: passed. `git diff --check`: clean. Both original SHA-256 hashes rechecked unchanged.
+
+All generated saves stay in ignored `.local/fixtures/neutral-later*`. Native
+in-game loading remains manual; no originals, game assets or external repositories
+were modified.

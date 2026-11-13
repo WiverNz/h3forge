@@ -87,3 +87,10 @@ preferences. Focused logic/localization tests, 366 synthetic browser assertions
 at 1280x720 in four languages/both themes, and one frontend build pass. Native
 WebView2 keyboard/relaunch and real pending-edit workflow smoke remain manual.
 No save format or editing operation changed; see the issue for exact evidence.
+
+
+H3F-027 later-save follow-up fixes a false tile-boundary ambiguity in the current
+SaAndVla.GM2 by validating existing render/object geometry. The current save now
+loads 469 wandering groups and 46 garrisons; copy-only core and application
+loading/edit/reopen regressions pass. Original H3F-027 sample totals above are
+historical, not counts for the newly supplied save.

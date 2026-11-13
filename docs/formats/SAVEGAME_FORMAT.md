@@ -1236,6 +1236,35 @@ subclass, level and action-mask position. The tile start must be within
 the first 30,000 bytes and template table within 16 MiB; render counts are
 bounded to 4,096. Unsupported/ambiguous layouts stay unavailable.
 
+**Later-save boundary regression (2026-11-13).** A length-only reverse walk can
+mistake header bytes for tiles. Discovery now checks each render entry against
+its current object: u16 object index at entry +0 must exist; byte +2 must equal
+`(dy << 4) | dx`, where `(dx,dy)` is object anchor minus tile coordinates,
+`dx < 8`, `dy < 6`, and levels agree. Entry +3 remains uninterpreted/preserved.
+The tile ordinal is derived backwards from the complete expected tile count,
+not from a guessed start. This reuses the render relationship already validated
+for relocation; it does not authorize any new write field. Zero-render tiles
+remain valid; multiple structurally valid walks still fail closed.
+
+Verified on private copies, both HotA 44/11, 252 x 252 x 2:
+
+| Save | Payload bytes | Tile start | Template start / count | Objects | Current monsters / garrisons |
+|---|---:|---:|---|---:|---|
+| SaAndVla_red_tent_before.GM2 | 5,011,968 | 2,263 | 3,546,131 / 6,623 | 36,540 | 1,119 / 46 |
+| SaAndVla.GM2 (later) | 4,948,677 | 2,253 | 3,493,237 / 6,644 | 36,540 | 469 / 46 |
+
+All 187,423 older and 174,202 later render entries match these relationships.
+The later file also admits a length-only start at 1,277, but that walk contains
+27 invalid object references and 225 anchor/relative-position mismatches. It is
+rejected structurally, not by choosing the greater offset or a filename rule.
+All listed groups have verified current armies. The differing totals describe
+current saves only, not proof of why particular objects disappeared.
+
+Compressed SHA-256:
+- Earlier: `A2EFEAB301BD319652FB4FD37CF93276EBA43B3E0773F9731FE96F9E72EEBBD2`.
+- Later: `C92361B8887D2E89A3453669617E89093A3DA3B09B799073F94260F0AEE45B1F`.
+
+
 For garrisons, tile +14 holds a u32 record index. All 47 indexes enumerate
 the entire garrison table exactly once and all 47 record coordinates match
 the corresponding current actionable tiles. The table is located backwards

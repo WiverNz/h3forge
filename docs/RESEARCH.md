@@ -488,3 +488,16 @@ Design: player-only bit edits, no simulated movement, replay, guard removal or
 ally propagation. Native HotA reload/access checks are still manual. See
 [the format evidence](formats/SAVEGAME_FORMAT.md#h3f-028---keymaster-tent-visits-hota-4411)
 and [H3F-028](issues/028-keymaster-tents.md) for exact offsets, gates and tests.
+
+
+### H3F-027 - Later-save tile-boundary ambiguity
+
+Verified on the current SaAndVla and red-tent-before saves: a length-only tile
+walk falsely accepted header offset 1,277 in the later file alongside real start
+2,253. Existing render object/anchor/relative-byte relationships reject the false
+walk; the complete real walk passes. Discovery now validates these relationships
+while walking backwards, retaining unique-boundary and write gates. Later/current
+counts are 469 wandering groups and 46 garrisons; earlier supplied counts are
+1,119 and 46. Differences do not establish defeat/removal history. See
+[H3F-027](issues/027-neutral-creatures.md) and
+[SAVEGAME_FORMAT.md](formats/SAVEGAME_FORMAT.md) for evidence and regressions.

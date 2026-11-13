@@ -55,6 +55,31 @@ pub(crate) struct ObjectTable {
     pub(crate) templates: Vec<(Vec<u8>, [u8; 33])>,
 }
 
+/// Render references bind a candidate tile walk to actual map coordinates.
+/// Header bytes can otherwise accidentally form a second length-only walk.
+fn render_matches(
+    p: &[u8],
+    at: usize,
+    count: usize,
+    index: usize,
+    size: usize,
+    objects: &ObjectTable,
+) -> bool {
+    let position = [index % size, index / size % size, index / (size * size)];
+    (0..count).all(|i| {
+        let entry = at + 22 + i * 4;
+        let Some(id) = word(p, entry) else { return false };
+        let Some(&(anchor, _, _, _)) = objects.objects.get(id as usize) else {
+            return false;
+        };
+        let dx = (anchor[0] as usize).checked_sub(position[0]);
+        let dy = (anchor[1] as usize).checked_sub(position[1]);
+        matches!((dx, dy), (Some(dx @ 0..=7), Some(dy @ 0..=5))
+            if anchor[2] as usize == position[2]
+                && p.get(entry + 2).copied() == Some((dy << 4 | dx) as u8))
+    })
+}
+
 /// Validate the complete template/object arrays, not just a .def signature.
 fn object_table(p: &[u8], start: usize) -> Option<ObjectTable> {
     let count = dword(p, start)? as usize;
@@ -159,6 +184,12 @@ pub(crate) fn current_map(doc: &SaveDocument) -> Result<(Vec<usize>, ObjectTable
             }
             let next = at + 22 + render * 4;
             if next <= start && distances[next] != 0 {
+                let remaining = distances[next] as usize;
+                if remaining > total
+                    || !render_matches(p, at, render, total - remaining, size, &objects)
+                {
+                    continue;
+                }
                 distances[at] = distances[next] + 1;
                 if distances[at] as usize == total + 1 && at < 30_000 {
                     beginnings.push(at);
@@ -545,6 +576,28 @@ impl SaveDocument {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn render_links_validate_tile_coordinates_not_just_record_lengths() {
+        let objects = ObjectTable {
+            objects: vec![([3, 4, 1], 54, 0, [0; 6])],
+            start: 0,
+            templates: Vec::new(),
+        };
+        let mut tile = vec![0; 26];
+        tile[24] = 0x21; // Anchor (3,4,1) minus tile (2,2,1).
+        let index = 10 * 10 + 2 * 10 + 2;
+        assert!(render_matches(&tile, 0, 1, index, 10, &objects));
+        assert!(!render_matches(&tile, 0, 1, index + 1, 10, &objects));
+        assert!(!render_matches(&tile, 0, 1, index - 100, 10, &objects));
+        tile[22] = 1;
+        assert!(!render_matches(&tile, 0, 1, index, 10, &objects));
+        tile[22] = 0;
+        tile[24] = 0;
+        assert!(!render_matches(&tile, 0, 1, index, 10, &objects));
+        assert!(!render_matches(&tile[..23], 0, 1, index, 10, &objects));
+        assert!(render_matches(&tile, 0, 0, index, 10, &objects));
+    }
 
     #[test]
     fn template_and_object_arrays_require_complete_bounded_references() {
