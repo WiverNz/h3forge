@@ -522,7 +522,7 @@ footer { padding: 5px 14px; gap: 8px; flex-wrap: wrap; font-size: 11px; }
 
 /* H3F-029: compact presentation-only list tools. Popovers enter the top layer. */
 .list-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; padding: 4px 8px 6px; flex-shrink: 0; }
-.list-controls button, .list-filter-popover button, .list-filter-summary button { padding: 4px 7px; font-size: 11px; border-radius: 4px; }
+.list-controls button, .list-filter-popover button { padding: 4px 7px; font-size: 11px; border-radius: 4px; }
 .list-sort-label { display: flex; align-items: center; gap: 4px; flex: 1; min-width: 120px; font-size: 11px; }
 .list-sort-label select { flex: 1; width: 0; min-width: 65px; }
 .list-controls select, .list-filter-popover select, .list-filter-popover input[type="search"] { color: var(--text); background: var(--background); border: 1px solid var(--border); border-radius: 4px; padding: 4px; font: inherit; font-size: 11px; }
@@ -530,13 +530,13 @@ footer { padding: 5px 14px; gap: 8px; flex-wrap: wrap; font-size: 11px; }
 .list-facet { border: 0; padding: 0; margin: 0 0 8px; min-width: 0; }
 .list-facet legend { font-weight: 600; margin-bottom: 4px; }
 .list-facet input[type="search"] { width: 100%; margin-bottom: 4px; box-sizing: border-box; }
-.list-facet-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px 6px; max-height: 160px; overflow: auto; }
+.list-facet-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px 5px; max-height: 120px; overflow: auto; }
 .list-facet-options label { display: flex; align-items: center; gap: 4px; min-height: 24px; overflow-wrap: anywhere; }
 .list-facet-options input { flex-shrink: 0; }
 .list-color-swatch { width: 9px; height: 9px; flex-shrink: 0; border: 1px solid var(--border); background: var(--player-color, var(--muted)); }
-.list-filter-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.list-filter-actions { display: flex; position: sticky; bottom: -8px; padding-top: 6px; background: var(--surface); }
+.list-filter-actions .list-clear-all { background: transparent; color: var(--muted); padding: 3px 0; font-weight: 400; text-decoration: underline; }
 .list-level { display: flex; align-items: center; gap: 6px; }
 .list-filter-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px; padding: 0 8px 6px; font-size: 11px; color: var(--muted); flex-shrink: 0; }
-.list-filter-summary button { color: var(--text); background: var(--neutral-bg); }
 .list-controls .list-sort-label select { max-width: none; }
 .neutral-categories { flex-wrap: wrap; }

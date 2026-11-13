@@ -9,7 +9,7 @@ export function useListSort(list: string, keys: readonly string[], defaultKey = 
   const { i18n } = useTranslation();
   const [sort, setSort] = useState(() => readListSort(list, keys, defaultKey));
   function changeSort(next: ListSort) { setSort(next); writeListSort(list, next); }
-  return { sort, changeSort, locale: i18n.resolvedLanguage ?? 'en', resetSort: () => changeSort({ key: defaultKey, direction: 'asc' }) };
+  return { sort, changeSort, locale: i18n.resolvedLanguage ?? 'en' };
 }
 
 export interface FacetOption { value: string; label: string; color?: string }
@@ -33,9 +33,9 @@ export function OwnerFacet({ selected, onChange }: { selected: string[]; onChang
   ]} />;
 }
 
-export function ListControls({ sort, onSort, options, active, onClear, onReset, hidden, children }: {
+export function ListControls({ sort, onSort, options, active, onClear, hidden, children }: {
   sort: ListSort; onSort: (value: ListSort) => void; options: { value: string; label: string }[];
-  active: number; onClear: () => void; onReset: () => void; hidden: boolean; children: ReactNode;
+  active: number; onClear: () => void; hidden: boolean; children: ReactNode;
 }) {
   const id = useId();
   const panel = useRef<HTMLDivElement>(null);
@@ -58,9 +58,12 @@ export function ListControls({ sort, onSort, options, active, onClear, onReset, 
     const element = panel.current;
     const rect = button.current?.getBoundingClientRect();
     if (!element || !rect) return;
-    element.style.left = `${Math.max(8, Math.min(rect.left, window.innerWidth - 304))}px`;
+    const listRect = button.current?.closest('.hero-list')?.getBoundingClientRect();
+    const width = Math.min(256, (listRect?.width ?? 272) - 16, window.innerWidth - 16);
+    element.style.width = `${width}px`;
+    element.style.left = `${Math.max(8, Math.min((listRect?.left ?? rect.left) + 4, window.innerWidth - width - 8))}px`;
     element.style.top = `${Math.min(rect.bottom + 4, window.innerHeight - 180)}px`;
-    element.style.maxHeight = `${Math.max(150, window.innerHeight - rect.bottom - 12)}px`;
+    element.style.maxHeight = `${Math.min(360, Math.max(150, window.innerHeight - rect.bottom - 12))}px`;
     element.togglePopover();
   }
   return <>
@@ -73,9 +76,9 @@ export function ListControls({ sort, onSort, options, active, onClear, onReset, 
       <button type="button" ref={button} aria-expanded={open} aria-controls={id} onClick={toggle}>{t('lists.filter')}{active > 0 && ` (${active})`}</button>
       <div ref={panel} id={id} popover="auto" className="list-filter-popover" aria-label={t('lists.filter')}>
         {children}
-        <div className="list-filter-actions"><button type="button" onClick={onClear}>{t('lists.clear')}</button><button type="button" onClick={onReset}>{t('lists.reset')}</button></div>
+        <div className="list-filter-actions"><button type="button" className="list-clear-all" onClick={onClear}>{t('lists.clearAll')}</button></div>
       </div>
     </div>
-    {(hidden || active > 0) && <div className="list-filter-summary">{hidden && <span>{t('lists.hidden')}</span>}<button type="button" onClick={onClear}>{t('lists.clear')}</button></div>}
+    {hidden && <div className="list-filter-summary">{t('lists.hidden')}</div>}
   </>;
 }

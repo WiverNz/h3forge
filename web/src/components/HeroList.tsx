@@ -31,8 +31,8 @@ export function HeroList({
   const [ownedOnly, setOwnedOnly] = useState(false);
 
   const [owners, setOwners] = useState<string[]>([]);
-  const { sort, changeSort, resetSort, locale } = useListSort('heroes', ['original', 'name', 'owner', 'level']);
-  const clear = () => { setQuery(''); setOwnedOnly(false); setOwners([]); };
+  const { sort, changeSort, locale } = useListSort('heroes', ['original', 'name', 'owner', 'level']);
+  const clear = () => { setOwnedOnly(false); setOwners([]); };
   const visible = sortList(heroes.filter((hero) => {
     if (ownedOnly && hero.owner.kind !== 'player') return false;
     if (!matchesFacet(owners, ownerKey(hero.owner))) return false;
@@ -72,7 +72,7 @@ export function HeroList({
           {t('ui.ownedOnly')}</label>
       </div>
       <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'owner', 'level'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
-        active={Number(!!query) + Number(ownedOnly) + owners.length} onClear={clear} onReset={() => { clear(); resetSort(); }}
+        active={Number(ownedOnly) + owners.length} onClear={clear}
         hidden={selectedId !== null && !visible.some(row => row.id === selectedId)}>
         <OwnerFacet selected={owners} onChange={setOwners} />
       </ListControls>

@@ -31,8 +31,8 @@ export function TownList({
 
   const [owners, setOwners] = useState<string[]>([]);
   const [factions, setFactions] = useState<string[]>([]);
-  const { sort, changeSort, resetSort, locale } = useListSort('towns', ['original', 'name', 'owner', 'faction']);
-  const clear = () => { setQuery(''); setOccupiedOnly(false); setOwners([]); setFactions([]); };
+  const { sort, changeSort, locale } = useListSort('towns', ['original', 'name', 'owner', 'faction']);
+  const clear = () => { setOccupiedOnly(false); setOwners([]); setFactions([]); };
   const visible = sortList(towns.filter((town) => {
     if (occupiedOnly && !town.hasGarrisonHero) return false;
     if (!matchesFacet(owners, ownerKey(town.owner))) return false;
@@ -73,7 +73,7 @@ export function TownList({
           {t('ui.heroInside')}</label>
       </div>
       <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'owner', 'faction'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
-        active={Number(!!query) + Number(occupiedOnly) + owners.length + factions.length} onClear={clear} onReset={() => { clear(); resetSort(); }}
+        active={Number(occupiedOnly) + owners.length + factions.length} onClear={clear}
         hidden={selectedId !== null && !visible.some(row => row.id === selectedId)}>
         <OwnerFacet selected={owners} onChange={setOwners} />
         <Facet label={t('lists.faction')} selected={factions} onChange={setFactions} options={[...new Map(towns.map(town => [town.townTypeName === null ? 'unknown' : String(town.townType), { value: town.townTypeName === null ? 'unknown' : String(town.townType), label: town.townTypeName ?? t('ui.unknown') }])).values()]} />

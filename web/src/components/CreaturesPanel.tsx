@@ -21,8 +21,8 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
   const [level, setLevel] = useState('all');
   const [owners, setOwners] = useState<string[]>([]);
   const [types, setTypes] = useState<string[]>([]);
-  const { sort, changeSort, resetSort, locale } = useListSort('creatures', ['original', 'name', 'quantity', 'coordinates']);
-  const clear = () => { setQuery(''); setKind('all'); setLevel('all'); setOwners([]); setTypes([]); };
+  const { sort, changeSort, locale } = useListSort('creatures', ['original', 'name', 'quantity', 'coordinates']);
+  const clear = () => { setKind('all'); setLevel('all'); setOwners([]); setTypes([]); };
   const [requests, setRequests] = useState(0);
   const generation = useRef(0);
   const queue = useRef(Promise.resolve());
@@ -76,8 +76,8 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
       </div>
       <div className="neutral-filter-count">{visible.length} / {data?.groups.length ?? 0}</div>
       <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'quantity', 'coordinates'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
-        active={Number(!!query) + Number(kind !== 'all') + Number(level !== 'all') + owners.length + types.length}
-        onClear={clear} onReset={() => { clear(); resetSort(); setKind('wandering'); }} hidden={!!current && !visible.some(g => g.id === current.id)}>
+        active={Number(kind !== 'all') + Number(level !== 'all') + owners.length + types.length}
+        onClear={clear} hidden={!!current && !visible.some(g => g.id === current.id)}>
         <OwnerFacet selected={owners} onChange={setOwners} />
         <Facet label={t('lists.creature')} selected={types} onChange={setTypes} searchable options={[
           ...typeOptions, { value: 'empty', label: t('ui.empty') }, { value: 'unknown', label: t('ui.unknown') },

@@ -81,11 +81,19 @@ async function run() {
   check(document.querySelectorAll('.hero-row').length === 13, 'Search combines with owner filters');
   check(find('[data-testid="detail"] input').getAttribute('value') === 'pending draft', 'Hidden selection retains draft');
   check(find('.list-filter-summary').textContent?.includes(t('lists.hidden')), 'Hidden-selection notice');
-  clickText(t('lists.clear')); await settle();
-  check(document.querySelectorAll('.hero-row').length === 40, 'Clear restores results');
+  await openFilters();
+  check(checks[0]!.checked && checks[1]!.checked, 'Closing preserves active filters');
+  check(find('.list-controls button[aria-controls]').textContent === `${t('lists.filter')} (2)`, 'Badge excludes independent search');
+  clickText(t('lists.clearAll')); await settle();
+  check(document.querySelectorAll('.hero-row').length === 13, 'Clear preserves search results');
+  check(find<HTMLInputElement>('input[type="search"]').value === 'Adam', 'Clear retains search');
   check(find<HTMLSelectElement>('.list-controls select').value === 'name', 'Clear retains sort');
-  await openFilters(); clickText(t('lists.reset')); await settle();
-  check(find<HTMLSelectElement>('.list-controls select').value === 'original', 'Reset restores sort');
+  check(!checks[0]!.checked && !checks[1]!.checked, 'Clear unchecks colors immediately');
+  check(find('.list-controls button[aria-controls]').textContent === t('lists.filter'), 'Clear removes filter badge');
+  check(find('.list-filter-popover').matches(':popover-open'), 'Clear keeps popup open for refinement');
+  find<HTMLElement>('.list-filter-popover').hidePopover();
+  input('input[type="search"]', ''); await settle();
+  check(document.querySelectorAll('.hero-row').length === 40, 'Independent search clearing restores all results');
 
   await mount('towns');
   find<HTMLInputElement>('.owned-filter input').click(); await settle();
@@ -94,6 +102,9 @@ async function run() {
   document.querySelectorAll<HTMLInputElement>('.list-facet')[1]!.querySelectorAll<HTMLInputElement>('input')[1]!.click(); await settle();
   check(document.querySelectorAll('.hero-row').length === 0, 'Faction AND Hero inside');
   check(find('[data-testid="detail"] span').textContent === '0', 'Town hidden selection retained');
+  clickText(t('lists.clearAll')); await settle();
+  check(document.querySelectorAll('.hero-row').length === 40, 'Town clear removes faction and quick filters');
+  check(!find<HTMLInputElement>('.owned-filter input').checked, 'Town quick filter unchecked');
   find<HTMLElement>('.list-filter-popover').hidePopover();
 
   await mount('players');
@@ -104,6 +115,11 @@ async function run() {
   check(document.querySelectorAll('.hero-row').length === 7, 'Unknown player status filter');
   check(find<HTMLInputElement>('.player-resource-input input') === draft && draft.value === 'invalid draft', 'Hidden player keeps editor input');
   check(document.querySelector('.resource-dirty'), 'Pending player marker preserved');
+  find<HTMLElement>('.list-filter-popover').hidePopover(); await settle(); await openFilters();
+  check(document.querySelectorAll<HTMLInputElement>('.list-facet input')[1]!.checked, 'Player filter survives close');
+  clickText(t('lists.clearAll')); await settle();
+  check(document.querySelectorAll('.hero-row').length === 8, 'Player clear restores all statuses');
+  check(draft.value === 'invalid draft', 'Player clear preserves pending editor input');
   find<HTMLElement>('.list-filter-popover').hidePopover();
 
   await mount('creatures');
@@ -114,9 +130,11 @@ async function run() {
   check(document.querySelectorAll('.hero-row').length === 1, 'Creature search');
   check(find('.neutral-detail h2').textContent === 'Dragon', 'Creature selection independent of results');
   check(find<HTMLInputElement>('.army-quantity-field input') === army && army.value === '', 'Creature draft survives hidden selection');
-  clickText(t('lists.clear')); await settle();
+  await openFilters(); clickText(t('lists.clearAll')); await settle();
+  check(document.querySelectorAll('.hero-row').length === 1, 'Creature clear keeps independent search');
+  check(find<HTMLInputElement>('.hero-list input[type="search"]').value === 'Архангел', 'Creature search retained');
+  input('.hero-list input[type="search"]', ''); await settle();
   check(document.querySelectorAll('.hero-row').length === 3, 'Clear includes all categories');
-  await openFilters();
   document.querySelectorAll<HTMLInputElement>('.list-facet input[type="checkbox"]')[8]!.click(); await settle();
   check(document.querySelectorAll('.hero-row').length === 1, 'Known neutral separated from null owner');
   check(find('.neutral-detail h2').textContent === 'Dragon', 'Neutral filter retains selected creature');
@@ -132,6 +150,10 @@ async function run() {
         const panel = find('.list-filter-popover').getBoundingClientRect();
         check(panel.left >= 0 && panel.right <= innerWidth && panel.bottom <= innerHeight, `${section}/${language}/${theme} popover fits`);
         check(find('.hero-rows').getBoundingClientRect().height > 200, `${section} retains list space`);
+        check(panel.width <= 256 && panel.height <= 360, 'Popup remains compact');
+        check(panel.right <= find('.hero-list').getBoundingClientRect().right, 'Popup stays over list, leaving details visible');
+        check(find('.list-filter-popover').querySelectorAll('button').length === 1, 'Only Clear all action in popup');
+        check(!document.querySelector('.list-filter-summary button'), 'No duplicate external clear action');
         check(document.documentElement.scrollWidth <= innerWidth, 'No horizontal viewport overflow');
         check(find('.list-filter-popover').contains(document.activeElement), 'Keyboard focus enters filters');
         find<HTMLElement>('.list-filter-popover').hidePopover(); await settle();

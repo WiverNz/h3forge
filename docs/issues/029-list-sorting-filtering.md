@@ -36,13 +36,16 @@ their availability and is not claimed as verified.
   may move into the popover while retaining its functionality.
 - Always show `filtered / total`, counting all loaded records in that section
   before search/category/other filters as total. Keep category subtotals if useful.
-  Provide an empty-results message and Clear filters action.
-- Clear filters clears search, quick filters and facets, including category to
-  All, but retains sorting. Reset list restores defaults: original order for
-  Heroes/Towns/Creatures, color ascending for Players, no search/facets, and
-  the existing Wandering category default for Creatures.
+  Provide an empty-results message. Filter (N) counts active facets and quick
+  filters, excluding independent search.
+- Filters update results immediately. The popup has one small Clear all action,
+  clearing facets and quick filters (category to All), preserving search and sort.
+  No Apply, Reset list or duplicate external Clear filters action. Dismissing by
+  outside click, Escape or the Filter toggle preserves the chosen filters.
+- Popups align to the list, at most 256px wide and 360px high, with scrollable
+  options. Details remain visible and the list below still shows live results.
 - Retain selected ID and detail/editor when filtered out. Show a small
-  "Selection hidden by filters" notice with Clear filters; never auto-select
+  "Selection hidden by filters" notice without an extra action; never auto-select
   another record or inject hidden rows into results. Initial selection and
   actual record removal follow existing rules.
 - Support keyboard operation, labeled direction state, Escape/outside dismissal
@@ -121,7 +124,7 @@ automated acceptance, with native checks below still manual:
 - [x] Numeric values, duplicate names, missing fields, Neutral/Unowned and
       unknown owners follow the documented ordering and filter rules.
 - [x] Search, sorting, multi-select facets and existing quick/category filters
-      compose correctly. Counts, empty states, Clear filters and Reset list agree.
+      compose correctly. Counts, empty states and Clear all agree; search and sorting remain independent.
 - [x] Players expose only evidenced status/team facts, with no invented defeat.
       Multi-stack garrisons, empty armies and unavailable quantities behave as specified.
 - [x] Sorting/filtering retains selected IDs and editor nodes. Browser fixtures
@@ -151,7 +154,7 @@ automated acceptance, with native checks below still manual:
   synthetic DTO fixtures, uses installed Chrome (or Edge via `-Browser` on
   `web/scripts/test-list-controls.ps1`), and keeps profile/DOM/logs/screenshot in
   ignored `.local/`. No game data is opened. It tests combined controls, hidden
-  selection/drafts, pending markers, counts/reset, scroll retention, focus and
+  selection/drafts, pending markers, counts/clear, scroll retention, focus and
   1280x720 layout across four languages/two themes. Fixture initialization was
   corrected to supply Tauri 3's `isTauri` flag before the successful run.
 - Browser testing found native scroll anchoring moved the viewport on row reorder;
@@ -173,3 +176,26 @@ WebView2 or in-game verification. Screenshots supplied by the user remain
 unavailable; the generated browser screenshot was visually reviewed instead.
 No Rust, command contracts, savegame bytes, format specifications, source game
 assets or other issue implementations changed. No commit, push or release.
+
+
+## Instant-filter popup UX follow-up
+
+Implemented per the revised request: keep immediate filtering, no draft/Apply
+stage. Removed Reset list and the external clear button; localized Clear all is
+small and secondary inside the popup. Clearing also resets Owned only, Hero
+inside and category/map-level filters, without changing search, selected record,
+sort direction or pending savegame edits. Closing preserves all active filters.
+The badge reflects active filters only, not search. Popup positioning/size keeps
+it over the list rather than the details panel.
+
+Follow-up verification:
+- Focused list logic/catalog tests: 11 passed; localized UI rendering: 2 passed.
+  Sandbox Node workers initially failed with `spawn EPERM`; authorized rerun
+  outside the sandbox passed.
+- `npm.cmd --prefix web --cache .local/npm-cache run test:lists-ui`: 366 assertions,
+  zero native write calls. Checks immediate results, retained filters on close,
+  clear/search/sort independence, badge count, retained editor input, one popup
+  action and no external duplicate, plus 256x360 bounds within the list in four
+  languages and both themes at 1280x720. Generated screenshot visually reviewed.
+- One final `npm.cmd --prefix web --cache .local/npm-cache run build`: passed.
+  Native manual gates above are unchanged. No unrelated functionality changed.

@@ -56,7 +56,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
 }) {
   const [statuses, setStatuses] = useState<string[]>([]);
   const [teams, setTeams] = useState<string[]>([]);
-  const { sort, changeSort, resetSort, locale } = useListSort('players', ['color', 'name', 'status'], 'color');
+  const { sort, changeSort, locale } = useListSort('players', ['color', 'name', 'status'], 'color');
   const clear = () => { setStatuses([]); setTeams([]); };
   const visible = sortList(players.filter(p => matchesFacet(statuses, p.status) && matchesFacet(teams, teamKey(p))), sort, locale, p => {
     if (sort.key === 'name') return colorName(p.color);
@@ -100,7 +100,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
       <div className="hero-list-head"><h2>{t('ui.players')}</h2><span className="hero-list-count">{visible.length} / {players.length}</span></div>
       <ListControls sort={sort} onSort={changeSort} options={[
         { value: 'color', label: t('lists.owner') }, { value: 'name', label: t('lists.name') }, { value: 'status', label: t('lists.status') },
-      ]} active={statuses.length + teams.length} onClear={clear} onReset={() => { clear(); resetSort(); }} hidden={!visible.some(p => p.id === selectedId)}>
+      ]} active={statuses.length + teams.length} onClear={clear} hidden={!visible.some(p => p.id === selectedId)}>
         <Facet label={t('lists.status')} selected={statuses} onChange={setStatuses} options={[
           { value: 'active', label: t('status.active') }, { value: 'unknown', label: t('status.unknown') },
         ]} />
