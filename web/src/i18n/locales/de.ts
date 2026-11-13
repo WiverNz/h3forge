@@ -1,5 +1,27 @@
 import type { Catalog } from '../types';
 export const de = {
+  "lists": {
+    "sort": "Sortieren",
+    "filter": "Filter",
+    "ascending": "Aufsteigend",
+    "descending": "Absteigend",
+    "clear": "Filter löschen",
+    "reset": "Liste zurücksetzen",
+    "hidden": "Auswahl durch Filter ausgeblendet",
+    "original": "Ursprüngliche Reihenfolge",
+    "name": "Name",
+    "owner": "Besitzerfarbe",
+    "level": "Stufe",
+    "faction": "Fraktion",
+    "status": "Aktivitätsstatus",
+    "team": "Kartenteam",
+    "creature": "Kreaturentyp",
+    "quantity": "Gesamtanzahl",
+    "coordinates": "Koordinaten (Ebene, Y, X)",
+    "allCategories": "Alle Kategorien",
+    "neutral": "Neutral / Ohne Besitzer",
+    "noTeam": "Kein festgelegtes Team"
+},
   "tents": {
     "title": "Schlüsselmeisterzelte",
     "visited": "Besucht",

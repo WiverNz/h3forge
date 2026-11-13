@@ -1,4 +1,26 @@
 export const en = {
+  "lists": {
+    "sort": "Sort",
+    "filter": "Filter",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "clear": "Clear filters",
+    "reset": "Reset list",
+    "hidden": "Selection hidden by filters",
+    "original": "Original order",
+    "name": "Name",
+    "owner": "Owner color",
+    "level": "Level",
+    "faction": "Faction",
+    "status": "Active status",
+    "team": "Map team",
+    "creature": "Creature type",
+    "quantity": "Total quantity",
+    "coordinates": "Coordinates (level, Y, X)",
+    "allCategories": "All categories",
+    "neutral": "Neutral / Unowned",
+    "noTeam": "No authored team"
+},
   "tents": {
     "title": "Keymaster Tents",
     "visited": "Visited",

@@ -1,7 +1,9 @@
+import { ListControls, OwnerFacet, Facet, useListSort } from './ListControls';
+import { sortList, matchesFacet, ownerKey, ownerValue } from '../lib/listView';
 import { colorName } from '../i18n/labels';
 import { t } from '../i18n/index';
 import { playerColor } from '../lib/playerColor';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { TownListItemDto } from '../types/api';
 import { decodeText, type LegacyEncoding } from '../lib/legacyText';
 import { CreaturePortrait } from './CreaturePortrait';
@@ -27,18 +29,24 @@ export function TownList({
   const [query, setQuery] = useState('');
   const [occupiedOnly, setOccupiedOnly] = useState(false);
 
-  const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return towns.filter((town) => {
-      if (occupiedOnly && !town.hasGarrisonHero) return false;
-      if (!needle) return true;
-      const typeName = town.townTypeName ?? '';
-      return (
-        decodeText(town.name, encoding).toLowerCase().includes(needle) ||
-        typeName.toLowerCase().includes(needle)
-      );
-    });
-  }, [towns, query, occupiedOnly, encoding]);
+  const [owners, setOwners] = useState<string[]>([]);
+  const [factions, setFactions] = useState<string[]>([]);
+  const { sort, changeSort, resetSort, locale } = useListSort('towns', ['original', 'name', 'owner', 'faction']);
+  const clear = () => { setQuery(''); setOccupiedOnly(false); setOwners([]); setFactions([]); };
+  const visible = sortList(towns.filter((town) => {
+    if (occupiedOnly && !town.hasGarrisonHero) return false;
+    if (!matchesFacet(owners, ownerKey(town.owner))) return false;
+    if (!matchesFacet(factions, town.townTypeName === null ? 'unknown' : String(town.townType))) return false;
+    const needle = query.trim().toLocaleLowerCase(locale);
+    return decodeText(town.name, encoding).toLocaleLowerCase(locale).includes(needle) || (town.townTypeName ?? '').toLocaleLowerCase(locale).includes(needle);
+  }), sort, locale, row => {
+    switch (sort.key) {
+      case 'name': return decodeText(row.name, encoding) || null;
+      case 'owner': return ownerValue(ownerKey(row.owner));
+      case 'faction': return row.townTypeName;
+      default: return null;
+    }
+  });
 
   return (
     <section className="hero-list" aria-labelledby="town-list-title">
@@ -64,6 +72,12 @@ export function TownList({
           />
           {t('ui.heroInside')}</label>
       </div>
+      <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'owner', 'faction'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
+        active={Number(!!query) + Number(occupiedOnly) + owners.length + factions.length} onClear={clear} onReset={() => { clear(); resetSort(); }}
+        hidden={selectedId !== null && !visible.some(row => row.id === selectedId)}>
+        <OwnerFacet selected={owners} onChange={setOwners} />
+        <Facet label={t('lists.faction')} selected={factions} onChange={setFactions} options={[...new Map(towns.map(town => [town.townTypeName === null ? 'unknown' : String(town.townType), { value: town.townTypeName === null ? 'unknown' : String(town.townType), label: town.townTypeName ?? t('ui.unknown') }])).values()]} />
+      </ListControls>
       <ul className="hero-rows" role="listbox" aria-label={t('ui.townRecords')}>
         {visible.map((town) => {
           const army = armyPreview(town.garrisonCreatureIds);

@@ -10,6 +10,7 @@
     "dev": "vite",
     "check": "tsc --noEmit",
     "test": "node --test src/lib/*.test.ts",
+    "test:lists-ui": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-list-controls.ps1",
     "test:i18n-ui": "esbuild src/i18n/render.test.tsx --bundle --platform=node --format=cjs --outfile=../.local/i18n-render.test.cjs && node --test ../.local/i18n-render.test.cjs",
     "build": "npm run check && vite build",
     "desktop:dev": "cd ../apps/h3forge-desktop && tauri dev",

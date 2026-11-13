@@ -1,7 +1,9 @@
+import { ListControls, OwnerFacet, useListSort } from './ListControls';
+import { sortList, matchesFacet, ownerKey, ownerValue } from '../lib/listView';
 import { colorName } from '../i18n/labels';
 import { t } from '../i18n/index';
 import { playerColor } from '../lib/playerColor';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { HeroListItemDto, PortraitDto } from '../types/api';
 import { decodeText, type LegacyEncoding } from '../lib/legacyText';
 import { Portrait } from './Portrait';
@@ -28,14 +30,22 @@ export function HeroList({
   const [query, setQuery] = useState('');
   const [ownedOnly, setOwnedOnly] = useState(false);
 
-  const visible = useMemo(() => {
-    const needle = query.trim().toLowerCase();
-    return heroes.filter((hero) => {
-      if (ownedOnly && hero.owner.kind !== 'player') return false;
-      if (!needle) return true;
-      return decodeText(hero.name, encoding).toLowerCase().includes(needle);
-    });
-  }, [heroes, query, ownedOnly, encoding]);
+  const [owners, setOwners] = useState<string[]>([]);
+  const { sort, changeSort, resetSort, locale } = useListSort('heroes', ['original', 'name', 'owner', 'level']);
+  const clear = () => { setQuery(''); setOwnedOnly(false); setOwners([]); };
+  const visible = sortList(heroes.filter((hero) => {
+    if (ownedOnly && hero.owner.kind !== 'player') return false;
+    if (!matchesFacet(owners, ownerKey(hero.owner))) return false;
+    const needle = query.trim().toLocaleLowerCase(locale);
+    return decodeText(hero.name, encoding).toLocaleLowerCase(locale).includes(needle);
+  }), sort, locale, row => {
+    switch (sort.key) {
+      case 'name': return decodeText(row.name, encoding) || null;
+      case 'owner': return ownerValue(ownerKey(row.owner));
+      case 'level': return row.level;
+      default: return null;
+    }
+  });
 
   return (
     <section className="hero-list" aria-labelledby="hero-list-title">
@@ -61,6 +71,11 @@ export function HeroList({
           />
           {t('ui.ownedOnly')}</label>
       </div>
+      <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'owner', 'level'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
+        active={Number(!!query) + Number(ownedOnly) + owners.length} onClear={clear} onReset={() => { clear(); resetSort(); }}
+        hidden={selectedId !== null && !visible.some(row => row.id === selectedId)}>
+        <OwnerFacet selected={owners} onChange={setOwners} />
+      </ListControls>
       <ul className="hero-rows" role="listbox" aria-label={t('ui.heroRecords')}>
         {visible.map((hero) => {
           const army = armyPreview(hero.armyCreatureIds);

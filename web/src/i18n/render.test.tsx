@@ -37,7 +37,9 @@ test('four-language shell, editor and error rendering keeps identities, classes 
       onTentEdit={() => { throw new Error("render must not edit"); }} onEdit={() => { throw new Error('render must not edit'); }} onRevert={() => {}}
       epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={0} />);
     assert.ok(players.includes(t('tents.title')));
-    assert.equal((players.match(/<select /g) ?? []).length, 8);
+    assert.equal((players.match(/<select /g) ?? []).length, 9);
+    assert.ok(players.includes(t('lists.sort')));
+    assert.ok(players.includes(t('lists.filter')));
     assert.ok(players.includes(t('tents.notVisited')));
     assert.ok(players.includes('id="tab-Resources"'));
     assert.ok(players.includes('id="player-Resources"'));

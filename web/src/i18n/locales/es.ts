@@ -1,5 +1,27 @@
 import type { Catalog } from '../types';
 export const es = {
+  "lists": {
+    "sort": "Ordenar",
+    "filter": "Filtrar",
+    "ascending": "Ascendente",
+    "descending": "Descendente",
+    "clear": "Borrar filtros",
+    "reset": "Restablecer lista",
+    "hidden": "Selección oculta por filtros",
+    "original": "Orden original",
+    "name": "Nombre",
+    "owner": "Color del propietario",
+    "level": "Nivel",
+    "faction": "Facción",
+    "status": "Estado de actividad",
+    "team": "Equipo del mapa",
+    "creature": "Tipo de criatura",
+    "quantity": "Cantidad total",
+    "coordinates": "Coordenadas (nivel, Y, X)",
+    "allCategories": "Todas las categorías",
+    "neutral": "Neutral / Sin propietario",
+    "noTeam": "Sin equipo definido"
+},
   "tents": {
     "title": "Tiendas del guardián de las llaves",
     "visited": "Visitada",

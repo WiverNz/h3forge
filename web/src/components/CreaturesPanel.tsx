@@ -1,3 +1,5 @@
+import { ListControls, OwnerFacet, Facet, useListSort } from './ListControls';
+import { sortList, matchesFacet, creatureOwner, creatureName, creatureQuantity, matchesCreatureType, selectedRecord } from '../lib/listView';
 import { useEffect, useRef, useState } from 'react';
 import { applyNeutralEdit, discardNeutralEdits, listNeutralArmies } from '../api/save';
 import { t } from '../i18n/index';
@@ -15,16 +17,20 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
   const [error, setError] = useState<FeedbackMessage | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [query, setQuery] = useState('');
-  const [kind, setKind] = useState<'wandering' | 'garrison'>('wandering');
+  const [kind, setKind] = useState<'all' | 'wandering' | 'garrison'>('wandering');
   const [level, setLevel] = useState('all');
+  const [owners, setOwners] = useState<string[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
+  const { sort, changeSort, resetSort, locale } = useListSort('creatures', ['original', 'name', 'quantity', 'coordinates']);
+  const clear = () => { setQuery(''); setKind('all'); setLevel('all'); setOwners([]); setTypes([]); };
   const [requests, setRequests] = useState(0);
   const generation = useRef(0);
   const queue = useRef(Promise.resolve());
   useEffect(() => {
     const token = ++generation.current;
-    setData(null); setError(null);
+    setError(null);
     listNeutralArmies().then(result => {
-      if (generation.current === token) setData(result);
+      if (generation.current === token) { setData(result); setSelected(id => selectedRecord(result.groups, id)?.id ?? null); }
     }, cause => { if (generation.current === token) setError(describeError(cause)); });
     return () => { generation.current++; };
   }, [epoch]);
@@ -34,7 +40,7 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
     queue.current = queue.current.then(async () => {
     try {
       const result = await action();
-      if (generation.current === token) setData(result);
+      if (generation.current === token) { setData(result); setSelected(id => selectedRecord(result.groups, id)?.id ?? null); }
       await onChanged();
     } catch (cause) {
       if (generation.current === token) setError(describeError(cause));
@@ -44,27 +50,42 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
     });
   };
   const title = (g: NeutralArmyDto) => g.kind === 'wandering' ? g.name ?? `${t('ui.creature')} #${g.creatureId}` : `${t('neutral.garrisons')} #${g.id}`;
-  const visible = data?.groups.filter(g => {
+  const visible = sortList((data?.groups ?? []).filter(g => {
     const text = `${title(g)} ${g.id} ${g.position.join(', ')} ${g.army?.map(s => s.name ?? s.creatureId).join(' ') ?? ''}`.toLowerCase();
-    return g.kind === kind && (level === 'all' || String(g.position[2]) === level)
+    return (kind === 'all' || g.kind === kind) && matchesFacet(owners, creatureOwner(g)) && matchesCreatureType(g, types) && (level === 'all' || String(g.position[2]) === level)
       && query.toLowerCase().split(/\s+/).every(part => text.includes(part));
-  }) ?? [];
-  const current = visible.find(g => g.id === selected) ?? visible[0];
-  const categoryCount = data?.groups.filter(g => g.kind === kind).length ?? 0;
+  }), sort, locale, g => {
+    if (sort.key === 'name') return creatureName(g);
+    if (sort.key === 'quantity') return creatureQuantity(g);
+    if (sort.key === 'coordinates') return [g.position[2], g.position[1], g.position[0]];
+    return null;
+  });
+  const current = data?.groups.find(g => g.id === selected);
+  const typeOptions = [...new Map((data?.groups ?? []).flatMap(g => g.army?.filter(slot => !slot.empty && slot.creatureId !== null)
+    .map(slot => [String(slot.creatureId), { value: String(slot.creatureId), label: slot.name ?? `#${slot.creatureId}` }] as const) ?? [])).values()];
+  typeOptions.sort((a, b) => new Intl.Collator(locale).compare(a.label, b.label));
   return <>
     <section className="hero-list neutral-list" aria-label={t('neutral.creatures')}>
       <div className="neutral-categories" aria-label={t('neutral.objectType')}>
-        {(['wandering', 'garrison'] as const).map(category => <button type="button" key={category} aria-pressed={kind === category} onClick={() => setKind(category)}>
-          {category === 'wandering' ? t('neutral.wandering') : t('neutral.garrisons')} <span>{data?.groups.filter(g => g.kind === category).length ?? 0}</span>
+        {(['all', 'wandering', 'garrison'] as const).map(category => <button type="button" key={category} aria-pressed={kind === category} onClick={() => setKind(category)}>
+          {category === 'all' ? t('lists.allCategories') : category === 'wandering' ? t('neutral.wandering') : t('neutral.garrisons')} <span>{data?.groups.filter(g => category === 'all' || g.kind === category).length ?? 0}</span>
         </button>)}
       </div>
       <div className="hero-list-filters">
         <input type="search" aria-label={t('neutral.search')} placeholder={t('neutral.search')} value={query} onChange={e => setQuery(e.target.value)} />
-        <select aria-label={t('neutral.level')} value={level} onChange={e => setLevel(e.target.value)}>
-          <option value="all">{t('neutral.allLevels')}</option><option value="0">{t('neutral.surface')}</option><option value="1">{t('neutral.underground')}</option>
-        </select>
       </div>
-      {(query || level !== 'all') && <div className="neutral-filter-count">{visible.length} / {categoryCount}</div>}
+      <div className="neutral-filter-count">{visible.length} / {data?.groups.length ?? 0}</div>
+      <ListControls sort={sort} onSort={changeSort} options={(['original', 'name', 'quantity', 'coordinates'] as const).map(value => ({ value, label: t(`lists.${value}`) }))}
+        active={Number(!!query) + Number(kind !== 'all') + Number(level !== 'all') + owners.length + types.length}
+        onClear={clear} onReset={() => { clear(); resetSort(); setKind('wandering'); }} hidden={!!current && !visible.some(g => g.id === current.id)}>
+        <OwnerFacet selected={owners} onChange={setOwners} />
+        <Facet label={t('lists.creature')} selected={types} onChange={setTypes} searchable options={[
+          ...typeOptions, { value: 'empty', label: t('ui.empty') }, { value: 'unknown', label: t('ui.unknown') },
+        ]} />
+        <label className="list-level">{t('neutral.level')}<select aria-label={t('neutral.level')} value={level} onChange={e => setLevel(e.target.value)}>
+          <option value="all">{t('neutral.allLevels')}</option><option value="0">{t('neutral.surface')}</option><option value="1">{t('neutral.underground')}</option>
+        </select></label>
+      </ListControls>
       <ul className="hero-rows" aria-label={t('neutral.creatures')}>
         {visible.map(g => <li key={g.id}><button type="button" className={`hero-row${current?.id === g.id ? ' selected' : ''}`} aria-pressed={current?.id === g.id} onClick={() => setSelected(g.id)}>
           <CreaturePortrait id={g.creatureId ?? g.army?.find(s => !s.empty)?.creatureId ?? null} compact />
@@ -72,6 +93,7 @@ export function CreaturesPanel({ epoch, onChanged, onBusy }: {
             {g.army ? g.army.filter(s => !s.empty).map(s => `${s.count} ${s.name ?? `#${s.creatureId}`}`).join(', ') || t('ui.empty') : t('neutral.quantityUnknown')}</small></span>
           <small className="neutral-row-position" title={g.position[2] === 0 ? t('neutral.surface') : t('neutral.underground')}>{g.position.join(' / ')}</small>
         </button></li>)}
+        {visible.length === 0 && <li className="hero-rows-empty">{t('ui.noRecordsMatch')}</li>}
       </ul>
     </section>
     <div className="editor-scroll neutral-editor">

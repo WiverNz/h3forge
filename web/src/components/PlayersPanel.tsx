@@ -1,3 +1,5 @@
+import { ListControls, Facet, useListSort } from './ListControls';
+import { sortList, matchesFacet, teamKey, ownerValue } from '../lib/listView';
 import { ReasonText } from '../i18n/reasons';
 import { colorName, resourceName } from '../i18n/labels';
 import { t, i18n } from '../i18n/index';
@@ -52,6 +54,15 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
   onEdit: (id: number, resource: number, value: number) => void;
   onRevert: (id: number) => void; epoch: number; artworkVersion: string; busy: boolean;
 }) {
+  const [statuses, setStatuses] = useState<string[]>([]);
+  const [teams, setTeams] = useState<string[]>([]);
+  const { sort, changeSort, resetSort, locale } = useListSort('players', ['color', 'name', 'status'], 'color');
+  const clear = () => { setStatuses([]); setTeams([]); };
+  const visible = sortList(players.filter(p => matchesFacet(statuses, p.status) && matchesFacet(teams, teamKey(p))), sort, locale, p => {
+    if (sort.key === 'name') return colorName(p.color);
+    if (sort.key === 'status') return p.status === 'active' ? 0 : null;
+    return ownerValue(String(p.color));
+  });
   const [tab, setTab] = useState<PlayerTab>('Resources');
   const tabButtons = useRef<(HTMLButtonElement | null)[]>([]);
   useEffect(() => { setTab('Resources'); }, [selectedId]);
@@ -86,9 +97,19 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
   if (!players.length) return <p className="scope-note column-placeholder">{t('ui.playerResourcesAreReadOnlyNoUnambiguousHota44')}</p>;
   return <>
     <section className="hero-list" aria-label={t('ui.players')}>
-      <div className="hero-list-head"><h2>{t('ui.players')}</h2><span>{players.length} {t('ui.slots')}</span></div>
+      <div className="hero-list-head"><h2>{t('ui.players')}</h2><span className="hero-list-count">{visible.length} / {players.length}</span></div>
+      <ListControls sort={sort} onSort={changeSort} options={[
+        { value: 'color', label: t('lists.owner') }, { value: 'name', label: t('lists.name') }, { value: 'status', label: t('lists.status') },
+      ]} active={statuses.length + teams.length} onClear={clear} onReset={() => { clear(); resetSort(); }} hidden={!visible.some(p => p.id === selectedId)}>
+        <Facet label={t('lists.status')} selected={statuses} onChange={setStatuses} options={[
+          { value: 'active', label: t('status.active') }, { value: 'unknown', label: t('status.unknown') },
+        ]} />
+        <Facet label={t('lists.team')} selected={teams} onChange={setTeams} options={[...new Set(players.map(teamKey))].map(value => ({
+          value, label: value === 'unknown' ? t('ui.unknown') : value === 'none' ? t('lists.noTeam') : t('ui.teamValue', { value1: value }),
+        }))} />
+      </ListControls>
       <ul className="hero-rows" role="listbox" aria-label={t('ui.playerRecords')}>
-        {players.map((p) => <li key={p.id}><button type="button" role="option"
+        {visible.map((p) => <li key={p.id}><button type="button" role="option"
           aria-selected={p.id === selectedId} data-player-color={playerColor({ kind: 'player', player: p.color })}
           className={`hero-row ${p.id === selectedId ? 'selected' : ''} ${p.status === 'unknown' ? 'uncertain' : ''}`}
           onClick={() => { setTab('Resources'); onSelect(p.id); }}>
@@ -98,6 +119,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
             <span className="hero-row-meta">{t('ui.valueHeroesValueTowns', { value1: p.heroCount, value2: p.townCount })}</span>
           </span>
         </button></li>)}
+        {visible.length === 0 && <li className="hero-rows-empty">{t('ui.noRecordsMatch')}</li>}
       </ul>
     </section>
     <div className="player-editor">
