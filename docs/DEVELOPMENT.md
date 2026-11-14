@@ -28,6 +28,14 @@ Use the native app to open a copied save and select a game installation. `npm --
 
 ## Focused verification
 
+Automated tests establish byte preservation and parser/session behavior, not
+in-game compatibility. Record actual HotA results in the
+[manual compatibility checklist](MANUAL_COMPATIBILITY.md), including individual
+passes, failures and missing metadata. The 2026-11-14 recorded user report covers
+specific hero edits and tent states; it does not validate all implemented editors.
+Documentation-only status updates need link/completeness/diff checks, not builds.
+
+
 ```powershell
 # Rust syntax/style and core-only checks for ordinary library changes.
 cargo fmt --all -- --check

@@ -16,7 +16,7 @@ H3Forge is a portable Windows save editor for **Heroes of Might and Magic III / 
 
 The direct download requires a published release containing `H3Forge.exe`; it becomes available when that asset is first released.
 
-> **Preview:** editing is verified against sample HotA saves, but loading edited saves in the matching game is still awaiting manual verification. Start with a copy of your save and keep your backups.
+> **Preview:** manual testing in HotA confirms hero army composition, visited Keymaster's Tent states, artifact addition, secondary skill replacement/addition, current mana, known spells, and all four primary attributes. Other operations retain their individual verification limits. See the [manual compatibility checklist](docs/MANUAL_COMPATIBILITY.md). Start with a copy of your save and keep your backups.
 
 ## What can I do with H3Forge?
 
@@ -94,7 +94,7 @@ The current editable format is the **verified HotA 44/11 save layout**. This is 
 - Other layouts, ambiguous records and unknown values may be readable but remain unsupported for editing. There is no blanket editing guarantee for Restoration of Erathia, Armageddon's Blade, Shadow of Death or other HotA layouts.
 - Some buildings, equipment, dismissal and map-army operations remain restricted, as described above. Hero relocation is constrained; town relocation, cross-level hero moves, boarding/landing and map revelation are not supported.
 - Missing or unsupported game resources can produce placeholders. Some extended hero portrait assignments are inferred; LZMA-compressed HotA resources are not supported.
-- Native clean-machine Windows 10/11 checks, human translation review and matching-game load checks remain release gates. A successful save/reopen check is not proof of in-game compatibility.
+- Native clean-machine Windows 10/11 checks, human translation review and in-game checks for untested operations remain release gates. A successful save/reopen check is not proof of in-game compatibility.
 
 See the [current release notes](docs/RELEASE_NOTES.md) and [feature status](docs/issues/README.md) for the detailed scope.
 

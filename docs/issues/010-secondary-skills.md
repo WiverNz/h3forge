@@ -1,6 +1,6 @@
 # H3F-010 - Edit secondary skills and mastery with version-aware ordering
 
-Status: completed (2026-11-09). Milestone: M4. Priority: P1.
+Status: completed (2026-11-09); replacing an existing skill and adding another verified in HotA by user report recorded 2026-11-14. Other skill operations remain automated-only. Milestone: M4. Priority: P1.
 
 ## Goal
 
@@ -36,7 +36,7 @@ One synthetic add/remove/reorder test plus a private sample-copy diff. Include i
 - **29/30 ambiguity resolved:** editing is gated to the exact 44/11 1122-byte record (30 order bytes at 1092); the 1121-byte 29-order-byte layout stays read-only. Capacity is 28 (h3sed DATA_RANGES "skills", locator cap 0x1C) even though 30 skill IDs exist.
 - **Operation:** `HeroEdit::SetSkills { skills: Vec<(id, mastery)> }` - one absolute ordered list per hero (session `FieldKey::Skills`), so add/remove/mastery/reorder all replay deterministically against the immutable base payload. `plan_skills` writes only: count low byte (43), mastery bytes (182+id), HotA order bytes (1092+id, dense 1-based); removed skills are zeroed; unrecognized entries (zero slot/mastery or slot beyond base count) and the legacy region 212..238 are byte-preserved. Rejects duplicates, unknown IDs, mastery outside 1-3, lists over 28.
 - **Frontend:** new `SkillsEditor` on the Skills tab - mastery dropdown per skill, up/down reorder, remove, and an alphabetical add-select that carries binary IDs; immediate pending edits (no Apply), dirty dot via "Skills", Revert/Discard unchanged. Unsupported layouts render the read-only chip list with the reason.
-- **Verification:** 6 synthetic edit.rs tests (add/remove/mastery/reorder offsets, duplicate/invalid/capacity rejection, legacy+unrecognized preservation) and one private sample-copy round trip (reorder + Wisdom→Expert + add Logistics = 7 patches, reopen shows `[(8,1,1),(24,2,2),(7,3,3),(2,1,4)]`, diff confined to count/mastery/order bytes, source untouched). Full workspace suites pass; clippy/fmt/build clean. In-game load remains the separate manual gate.
+- **Verification:** 6 synthetic edit.rs tests (add/remove/mastery/reorder offsets, duplicate/invalid/capacity rejection, legacy+unrecognized preservation) and one private sample-copy round trip (reorder + Wisdom→Expert + add Logistics = 7 patches, reopen shows `[(8,1,1),(24,2,2),(7,3,3),(2,1,4)]`, diff confined to count/mastery/order bytes, source untouched). Full workspace suites pass; clippy/fmt/build clean. User-reported HotA verification now covers replacement of one existing skill and addition of another (recorded 2026-11-14). Removal, mastery changes and reordering retain automated-only coverage. See the [manual checklist](../MANUAL_COMPATIBILITY.md).
 
 
 ## Skills artwork follow-up (2026-11-09)

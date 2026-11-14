@@ -1,6 +1,6 @@
 # H3F-008 - Complete the sample spell-edit workflow with backups and safe saving
 
-Status: implemented (2026-11-08); one acceptance gate pending an in-game load test by the maintainer. Milestone: M3. Priority: P0.
+Status: implemented (2026-11-08); hero attributes/mana/known spells now verified in HotA by user report recorded 2026-11-14. Separate persistence/recovery scenarios remain automated-only. Milestone: M3. Priority: P0.
 
 ## Goal
 
@@ -20,7 +20,9 @@ H3F-007 See the [issue index](README.md) and [architecture](../ARCHITECTURE.md).
 
 ## Acceptance criteria
 
-- [x] Copy of SaAndVla opens, a real owned hero's learned spell changes, a backup is created, output is saved/reopened and the matching game loads it. - Everything except the in-game load is verified (`tests/edit_flow.rs`, private copy): the candidate at span 4,727,078 gains Air Shield, the output is written next to a `<dest>.backup-<millis>` recovery copy of the original compressed bytes, reopens through the strict reader with the modified values and a payload diff of exactly the 5 planned offsets. **Pending:** maintainer loads the written file in HotA (44/11) and confirms; parser round-trip success is explicitly not a substitute.
+- [x] Automated sample checkpoint: a copy of SaAndVla opens, the owned hero at span 4,727,078 gains Air Shield, output/backup are saved and reopened, and the payload diff matches the five planned offsets (`tests/edit_flow.rs`).
+- [x] Feature-level HotA acceptance: the user confirms known-spell, current mana and all four primary attribute edits worked in the actual game. See the [manual checklist](../MANUAL_COMPATIBILITY.md).
+- Evidence limit: the user report identifies neither the historical SaAndVla/Air Shield case nor a Save/Save As mode; it must not be presented as that exact test.
 - [x] Decompressed diff is limited to the reviewed patches; backup equals original compressed source; no-op Save writes nothing. - byte-diff equality with the patch union asserted on the real save; backup bytes compared to the original; a save with no pending edits fails with `nothing-to-save` and never touches disk.
 - [x] Failed backup, locked file, changed source or failed output validation preserve a recoverable original and retain unsaved edits. - verified for changed-source (`source-changed`, detected before any write, no backup/temp residue), existing destination (`file-exists`, destination content untouched, edits retained) and post-write validation failure (temp removed, original and edits intact). Locked-file behavior maps to `write-failed` with the same recovery guarantees (same code path as the other write errors).
 - [x] Overwrite is never implemented as delete-then-rename; Save As handles an existing target with explicit selection and its own backup. - Save As refuses existing targets (`file-exists`, no-clobber); the commit is a same-directory rename of a verified temp file, which on Windows atomically fails when the destination exists. An explicit overwrite flow (with target backup) remains future work and is not needed for the M3 checkpoint.
@@ -36,7 +38,7 @@ H3F-007 See the [issue index](README.md) and [architecture](../ARCHITECTURE.md).
 
 Run focused persistence tests in temp for no-op, changed source, backup failure, locked target and success. Perform one UI open/edit/save/reopen smoke plus one matching-game load of the output copy. Record the game version/result; leave acceptance pending if the game is unavailable.
 
-Covered by `tests/edit_flow.rs` (success round trip incl. backup + original hash; file-exists; source-changed; same-file; forbidden destinations; no-spellbook warning; discard) - 3 tests, private-copy opt-in. Frontend `npm run build` (typecheck + bundle) passes. The manual UI smoke and the in-game load remain for the maintainer (see the final report for exact steps); the game-load acceptance box stays open until then.
+Covered by `tests/edit_flow.rs` (success round trip incl. backup + original hash; file-exists; source-changed; same-file; forbidden destinations; no-spellbook warning; discard) - 3 tests, private-copy opt-in. Frontend `npm run build` (typecheck + bundle) passes. The later user report confirms the listed hero edits in HotA. Detailed native UI/failure/recovery smoke and separate Save modes remain unrecorded; see the manual checklist.
 
 Verification note: opt-in fixture tests resolve `H3FORGE_FIXTURE_ROOT` against the *crate* working directory, so the variable must be an absolute path (e.g. `D:\Projects\h3forge\games`); a relative value silently skips while reporting `ok`. The 2026-11-08 run executed every fixture test for real (107 passed / 0 failed workspace-wide with the saves root, 39 passed / 0 skips for the resource suite with the `Data` root) and fixed two test-side defects found on the way: a wrong relative fixture depth in the src-tauri tests, and two assertions that counted patched offsets instead of comparing sorted patch unions.
 
@@ -56,4 +58,4 @@ Save As now atomically installs a new hard link to the verified temporary output
 
 Two real-save regression tests passed with 215 heroes. Rejections cover invalid values, existing Save As targets, protected development sources/Data destinations, same-size same-mtime external byte changes, and a real Windows sharing lock that allows preparation but denies replacement (original, backup, and pending edit verified intact). All five existing edit-flow tests also passed. No sample bytes, extracted art or output saves are tracked.
 
-Status remains **implemented, manual HotA loading acceptance pending**. Structural/binary correctness is verified; actual game loading and gameplay are not. `cargo check --workspace` and the frontend TypeScript/Vite build both passed (one final run each); `git diff --check` is clean.
+Current status: **implemented, reported hero operations verified in HotA**. The 2026-11-14 recorded report supplements structural/binary checks; it does not certify every gameplay interaction, persistence path or the exact historical fixture. `cargo check --workspace` and the frontend TypeScript/Vite build both passed (one final run each); `git diff --check` is clean.

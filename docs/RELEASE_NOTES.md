@@ -9,7 +9,7 @@ The executable is unsigned; Windows may display an unknown-publisher warning.
 
 Place it beside Heroes III / HotA to discover that installation, or run it from
 another folder and use the installation picker. Keep your own game installation.
-Work on copied saves until the matching-game checks below are completed.
+Work on copied saves and retain backups. Feature-level manual results are recorded in the [compatibility checklist](MANUAL_COMPATIBILITY.md).
 
 ## Supported preview scope
 
@@ -20,17 +20,23 @@ also editable. Writes use checked patches, backups and parser reopen verificatio
 Recognition of another layout does not authorize editing it. Ambiguous records,
 unknown IDs and unsupported operations remain read-only.
 
-Map-position editing and map revelation are unfinished. Some town buildings,
-equipment combinations, scroll/equipment coupling and resource encodings remain
-unsupported. Some extended hero portrait assignments are inferred. HotA opaque-ID
-stored/zlib archives work; LZMA does not. In-game loading of edited saves remains
-unverified: a parser round trip is not proof of game compatibility.
+Constrained hero relocation is implemented but unverified in-game; town relocation,
+cross-level/medium moves and map revelation remain unsupported. Some town buildings,
+automatic combination assembly/disassembly, scroll/equipment coupling and resource
+encodings remain unsupported. Supported combination equip/replace/remove remains
+automated-only. Some extended hero portrait assignments are inferred. HotA opaque-ID
+stored/zlib archives work; LZMA does not. User-reported HotA testing confirms hero army composition, visited tent states,
+artifact addition, secondary skill replacement/addition, current mana, known
+spells and all four primary attributes. Exact game version, save filename and
+build were not provided. Town editing, player resources, map creatures and
+other unlisted operations remain unverified in-game; a parser round trip alone
+is not proof of game compatibility.
 
 ## Before a public release
 
 Clean Windows 10 and 11 launch/edit/save/reopen, both placement modes, icon
 appearance, missing-WebView2 behavior, four-language visual/translation review,
-and matching-game loading remain manual gates. H3F-016 acceptance and the complete
+and matching-game testing of unverified operations remain manual gates. H3F-016 acceptance and the complete
 transitive dependency license inventory also need release review. This workflow
 does not certify those checks. See `docs/RELEASE.md` in the tagged source for
 recovery instructions, verification commands and maintainer checks.

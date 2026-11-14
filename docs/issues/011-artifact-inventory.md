@@ -1,6 +1,6 @@
 # H3F-011 - Edit backpack artifacts and scrolls
 
-Status: completed (in-game loading remains a separate manual acceptance gate). Milestone: M4. Priority: P1.
+Status: completed; artifact addition to heroes is verified in HotA by user report recorded 2026-11-14. Backpack/equipment destination and artifact IDs were not specified; other inventory operations retain automated-only coverage. Milestone: M4. Priority: P1.
 
 ## Goal
 
@@ -39,6 +39,6 @@ One artifact and one scroll replacement test, full-capacity rejection, and uncha
 - No verified artifact resource mapping exists; neutral placeholders are used. No resource milestone expansion.
 - Focused core tests: add/replace/remove, scroll add/replace, all eight scroll bytes, unknown/sentinel preservation, exact patch offsets, full-capacity boundary rejection and unsupported values. Full UI disables Add and explains removal is required.
 - Actual temporary SaAndVla.GM2 round trip via application Save As: slots 2 and 3 (zero-based), patches at hero-relative 550 and 558, eight bytes each. Actual differing relative bytes: 550–562 (13 bytes). Reopened correctly; every byte outside those two slots and equipment unchanged; input copy unchanged. Pending state, DTO conversion, hero navigation, Revert, Discard and clean state after save verified in the same test.
-- Final verification: targeted Rust tests, `cargo check --workspace`, frontend `npm run build`, formatting and diff checks. In-game loading remains unperformed/manual.
+- Final verification: targeted Rust tests, `cargo check --workspace`, frontend `npm run build`, formatting and diff checks. The later user report verifies artifact addition to heroes in HotA, without identifying backpack versus equipment placement. Removal/replacement, scrolls and capacity cases remain unverified in-game. See the [manual checklist](../MANUAL_COMPATIBILITY.md).
 
 Next issue: H3F-012; not started. Equipment and combined-artifact behavior remain out of scope.

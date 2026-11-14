@@ -1,7 +1,8 @@
 # H3F-028 - Keymaster Tents and Player Visit Status
 
-Status: implemented and sample-verified; native HotA loading/access validation
-remains manual. Milestone: M4. Priority: P1. Dependencies: 006, 008, 018, 021.
+Status: implemented and sample-verified; modified visited tent states verified
+in actual HotA by user report recorded 2026-11-14. Guard/gate access interactions
+and exhaustive player/color coverage remain unverified in-game. Milestone: M4. Priority: P1. Dependencies: 006, 008, 018, 021.
 
 ## Delivered
 
@@ -87,7 +88,9 @@ remain unresolved and are deliberately not written. The existing local H3M
 reference has different tent positions from the new pair and corroborates only
 subtype/artwork mappings, never current save offsets.
 
-Still manual: load an edited copy in matching native HotA, check Pink's Red
-Tent visit text and matching Border Guard/Gate access, and verify native window
-layout at 1280x720. Automated tests do not establish these in-game outcomes.
+User-reported manual pass: modified visited tent states worked in actual HotA.
+The report does not specify players/colors or Border Guard/Gate interactions;
+those individual checks and native layout at 1280x720 remain open. It does not
+add 63 native action pairs or certify every bit combination. See the
+[manual checklist](../MANUAL_COMPATIBILITY.md).
 No commit, push, release, or other issue work was performed.

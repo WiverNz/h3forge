@@ -111,10 +111,57 @@ fn def_rejects_bad_offsets_truncation_overruns_dimensions_and_variants() {
 #[test]
 fn creature_mapping_is_by_name_never_frame_position_or_hota_reuse() {
     assert_eq!(creature_frame_name(0).as_deref(), Some("CPrL000C.pcx"));
-    assert_eq!(creature_frame_name(44).as_deref(), Some("CPrL044I.pcx"));
-    assert_eq!(creature_frame_name(46).as_deref(), Some("CPrL046I.pcx"));
+    assert_eq!(creature_frame_name(44).as_deref(), Some("CPrL046I.pcx"));
+    assert_eq!(creature_frame_name(45).as_deref(), Some("CPrL047I.pcx"));
+    assert_eq!(creature_frame_name(46).as_deref(), Some("CPrL044I.pcx"));
+    assert_eq!(creature_frame_name(47).as_deref(), Some("CPrL045I.pcx"));
     for id in [122, 124, 126, 128, 145, 151, 153, 199, u32::MAX] {
         assert!(creature_frame_name(id).is_none());
+    }
+}
+
+#[test]
+fn xyron_inferno_portrait_evidence() {
+    let Some(root) = std::env::var_os("H3FORGE_FIXTURE_ROOT") else {
+        eprintln!("skipping Xyron portraits: no asset root");
+        return;
+    };
+    let root = std::path::PathBuf::from(root);
+    let archive = LodArchive::open(root.join("H3sprite.lod")).unwrap();
+    let def = DefFile::parse(
+        archive
+            .read_entry(archive.find_entry("TwCrPort.def").unwrap())
+            .unwrap(),
+        ResourceLimits::default(),
+    )
+    .unwrap();
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.local/fixtures");
+    std::fs::create_dir_all(&out).unwrap();
+    let mut hota = h3forge_resources::HotACreaturePortraits::load(
+        &LodArchive::open(root.join("HotA.lod")).unwrap(),
+    )
+    .unwrap();
+    // Independently identified artwork: Gog, Magog, Hell Hound, Cerberus.
+    for (id, crc) in [
+        (44, 0xe83e6686),
+        (45, 0x40aadf17),
+        (46, 0x81da69e4),
+        (47, 0xaff3baad),
+    ] {
+        let name = creature_frame_name(id).unwrap();
+        let png = encode_png(&def.decode_named(&name).unwrap().to_rgba());
+        assert_eq!(
+            crc32fast::hash(&png),
+            crc,
+            "creature {id} portrait identity"
+        );
+        std::fs::write(out.join(format!("xyron-base-{id}.png")), &png).unwrap();
+        std::fs::write(
+            out.join(format!("xyron-hota-{id}.png")),
+            hota.png(id).unwrap().unwrap(),
+        )
+        .unwrap();
+        eprintln!("{id}: {name}, CRC {:08x}", crc32fast::hash(&png));
     }
 }
 

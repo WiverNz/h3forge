@@ -357,8 +357,10 @@ compaction, sorting or count normalization is performed (H3SED also serializes
 only the slot region). Combination reservations at 1046–1055 remain untouched.
 VERIFIED_IN_H3FORGE: application Save As/reopen sample test changed only bytes
 550–562 relative to the selected hero, in slots 2 and 3; equipment and all
-other payload bytes identical. In-game loading remains a separate manual
-acceptance gate.
+other payload bytes identical. A user report recorded 2026-11-14 verifies
+artifact addition to heroes in HotA but does not identify backpack versus
+equipment placement. Scrolls and other inventory cases remain manually
+unverified; see [MANUAL_COMPATIBILITY.md](../MANUAL_COMPATIBILITY.md).
 
 #### Equipment editing (H3F-012)
 
@@ -740,9 +742,11 @@ Result: 5 patches; the reopened save differs from the original payload in
 **exactly** those 5 offsets and nowhere else (sorted-offset diff assertion).
 Attack reads back as 9, `spells_learned[0]=1`, `spells_learned[64]=0`.
 
-**Compatibility claim:** parser round-trip is verified; an actual matching
-HotA build loading the modified save is a separate, still-open manual gate
-(H3F-008 acceptance). Do not claim game compatibility from round-trips alone.
+**Compatibility claim:** this exact fixture has parser round-trip evidence.
+The user now reports successful known-spell, mana and all four primary attribute
+changes in actual HotA (recorded 2026-11-14), without identifying that fixture,
+spell or exact game version. See [MANUAL_COMPATIBILITY.md](../MANUAL_COMPATIBILITY.md).
+Do not infer untested variants or additional format coverage from either result.
 
 ### G.4 Currently writable vs frozen ranges
 
@@ -1618,9 +1622,10 @@ These masks are the player-wide keys for matching Border Guards/Gates. The
 editor does not remove guards, restore removed guards, simulate a visit/movement,
 reveal fog, update replay history, or propagate the selected player's edit to
 allies. Clearing access does not resurrect an already removed guard. There is no
-separate tent visit counter in the supplied native action diff. Actual native
-HotA reload and guard/gate interaction remain a manual validation gate; only
-Pink/Red has an observed native transition. The other 63 operations use the
+separate tent visit counter in the supplied native action diff. Modified visited
+tent states now have a user-reported HotA pass (recorded 2026-11-14), with
+players/colors unspecified. Guard/gate interactions remain manually unverified;
+only Pink/Red has an observed native before/after transition. The other 63 operations use the
 verified shared bitmask structure, enum and current-save templates, with exact
 independent-bit round-trip tests, not 63 additional native action pairs.
 

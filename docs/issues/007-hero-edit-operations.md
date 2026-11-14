@@ -1,6 +1,14 @@
 # H3F-007 - Plan validated attribute and spell patches for HotA 44/11
 
-Status: completed (implementation evidence 2026-11-08). Milestone: M3. Priority: P0.
+Status: completed (implementation evidence 2026-11-08); current mana, known spells and all four primary attributes verified in HotA by user report recorded 2026-11-14. Milestone: M3. Priority: P0.
+
+## Manual HotA verification
+
+The user reports successful current mana, known-spell and all four primary
+attribute changes (Attack, Defense, Spell Power, Knowledge) in actual HotA.
+Recorded 2026-11-14; exact game version, save and edited values were not supplied.
+Experience/level, boundary values and equipment-granted interactions are not
+covered. See the [manual checklist](../MANUAL_COMPATIBILITY.md).
 
 ## Goal
 

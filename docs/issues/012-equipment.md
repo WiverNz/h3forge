@@ -2,6 +2,13 @@
 
 Status: completed. Milestone: M4. Priority: P1.
 
+Manual update recorded 2026-11-14: the user verified adding artifacts to heroes
+in HotA. Placement and artifact IDs were not specified, so this does not establish
+wear-slot swaps/unequips, attribute-bonus coupling or granted-spell coupling.
+Those equipment-specific operations remain automated-only. Historical manual
+limitations below apply to these untested cases, not to all artifact addition.
+See the [manual checklist](../MANUAL_COMPATIBILITY.md).
+
 ## Goal
 
 Equip supported artifacts without corrupting stats, granted spells or slot reservations.
@@ -59,7 +66,7 @@ Verified: 7 unit tests in `edit.rs` (equip/unequip involution, replace delta, gr
 add/withdraw, bannable conditional, slot/artifact/blocker rejections, batch conflict
 dedupe/rejection) and `tests/sample_equipment_roundtrip.rs` against a copy of
 SaAndVla.GM2 (equip + unequip restores the payload byte-for-byte; diff limited to the
-patch union; source untouched). In-game loading is still the separate manual gate.
+patch union; source untouched). Equipment-specific swaps/unequips and coupled effects still require manual verification; generic artifact addition is covered by the report above.
 
 ## Visual artifact editor follow-up - completed (2026-11-10)
 
@@ -90,7 +97,7 @@ Verification: original-resource icon coverage/pinned pixels/fallback; focused
 Rust equipment gates and reservation-preservation tests; real-sample session flow
 covering backpack replacement/move, equipment replacement/swap, pending primary
 bonus, Save As/reopen and both Discard variants. Final workspace check and frontend
-build recorded with the completion result. Manual in-game loading remains unverified.
+build recorded with the completion result. Manual verification of this replacement/transfer/coupling flow remains open; the reported artifact-addition pass is narrower.
 
 Final verification (2026-11-10): 3 local-resource tests passed (163 icons plus
 fallbacks); 9 focused equipment/locator tests passed, with the precise blocker
@@ -127,7 +134,7 @@ Verification: 68 save-crate unit tests (3 new combination cases, table
 consistency), the real-sample reservation test over all four saves, and a
 real-sample session flow (`combination_and_in_place_equipment_flow`) covering
 display, refusal, in-place replacement, Save As and reopen. Frontend typecheck
-passes. Not verified: the native window and in-game loading.
+passes. Not verified: the native window and this combination/in-place equipment flow in-game. The generic artifact-addition report does not specify combination artifacts.
 
 ### Combination picker follow-up (2026-11-10)
 
@@ -140,4 +147,4 @@ passes. Not verified: the native window and in-game loading.
 
 Verification: table test (every component maps back to its combination) and
 the real-sample session test `combination_equipped_through_secondary_slot`.
-Native window and in-game loading still unverified.
+Native window and this secondary-slot combination workflow remain unverified in-game.

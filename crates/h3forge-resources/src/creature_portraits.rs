@@ -24,7 +24,18 @@ pub fn creature_frame_name(id: u32) -> Option<String> {
         132..=144 => 'N',
         _ => return None,
     };
-    Some(format!("CPrL{id:03}{suffix}.pcx"))
+    let frame = portrait_number(id);
+    Some(format!("CPrL{frame:03}{suffix}.pcx"))
+}
+
+// Both portrait containers put hounds before gogs, unlike creature IDs.
+// Verified against the local frames and Xyron's native game screenshot.
+fn portrait_number(id: u32) -> u32 {
+    match id {
+        44 | 45 => id + 2,
+        46 | 47 => id - 2,
+        _ => id,
+    }
 }
 
 #[derive(Debug)]
@@ -66,11 +77,11 @@ impl CreaturePortraits {
 }
 
 /// Frame index of one creature portrait inside the HotA twcrport D32F
-/// container. HotA's 202-frame container (IDs 0..201) places creature ID `i`
-/// at frame `i + 2`; frames 0 and 1 are container fillers.
+/// container. HotA's 202-frame container places portrait number `i`
+/// at frame `i + 2`; creature IDs 44..47 require `portrait_number` first.
 ///
 /// Evidence (2026-11-10, VERIFIED_IN_H3FORGE): for all 145 base portraits
-/// with standard TwCrPort art, frame `id + 2` carries the same creature -
+/// with standard TwCrPort art, frame `portrait_number(id) + 2` matches -
 /// 94 frames are pixel-identical (RGBA CRC-32 equal after palette
 /// conversion) and 36 more match with small per-channel distance; the
 /// remaining 11 share the full opaque silhouette but carry HotA's
@@ -78,7 +89,7 @@ impl CreaturePortraits {
 /// machines, reserved) are named fillers (`twcrport_000`/`_001`) and map
 /// to `None`. Selection is by index AND verified embedded frame name.
 pub fn hota_creature_frame_index(id: u32) -> Option<usize> {
-    (id <= 199).then_some(id as usize + 2)
+    (id <= 199).then(|| portrait_number(id) as usize + 2)
 }
 
 /// Creature portraits from the HotA 1.8 `twcrport` D32F container in the
@@ -109,8 +120,8 @@ impl HotACreaturePortraits {
     }
 
     /// PNG for one creature ID (0..=199); `None` for IDs outside the range
-    /// and for filler slots (war machines and reserved IDs). The frame at
-    /// `id + 2` must carry the exact expected embedded name, otherwise the
+    /// and for filler slots (war machines and reserved IDs). The mapped
+    /// frame must carry the exact expected embedded name, otherwise the
     /// layout is treated as unknown and no image is produced.
     pub fn png(&mut self, id: u32) -> Result<Option<&[u8]>, ResourceError> {
         let Some(frame) = hota_creature_frame_index(id) else {

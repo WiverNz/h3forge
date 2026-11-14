@@ -1,12 +1,12 @@
 # H3Forge product requirements
 
-Status: implementation plan, 2026-11-08. No application has been implemented. Technical evidence is in [RESEARCH.md](RESEARCH.md); delivery order is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+Status: requirements with implemented features and remaining scope; updated 2026-11-14. Hero armies, visited tent states, artifact addition, secondary skill replacement/addition, mana, known spells and all four primary attributes have user-reported in-game HotA verification. See the [manual compatibility checklist](MANUAL_COMPATIBILITY.md) for exact scope and untested operations. Technical evidence is in [RESEARCH.md](RESEARCH.md); delivery order is in [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
 
 ## Purpose and users
 
 Make editing a personal Heroes of Might and Magic III / Horn of the Abyss save understandable, visual, and recoverable on Windows 10/11. Primary users are players adjusting a campaign or cooperative game and scenario authors checking hero setups. Users should not need binary-format knowledge or Python tools.
 
-The first significant outcome is opening a **copy** of `SaAndVla.GM2`, showing its actual heroes, changing a learned spell, saving a new valid file, reopening it, and successfully loading it in the matching game. Reopening in H3Forge alone does not establish game compatibility.
+The first significant outcome is opening a **copy** of `SaAndVla.GM2`, showing its actual heroes, changing a learned spell, saving a new valid file, reopening it, and successfully loading it in the matching game. Reopening in H3Forge alone does not establish game compatibility. The user has now confirmed known-spell editing in HotA; the manual report does not identify its save filename, exact game version or specific spell, so it is not attributed to this historical sample.
 
 ## Product scope
 
@@ -61,4 +61,4 @@ Runtime is native Rust plus the Windows webview; frontend tooling is build-time 
 
 ## Deferred features
 
-Expand exact-version coverage using a few representative user-provided fixtures, support more HotA resource variants, improve portrait/custom-hero identity, and add advanced town fields only when their representation and coupling are understood. Animation, batch edits, save comparison, undo history beyond reset/discard, and localization beyond correctly displaying legacy text are optional later work.
+Expand exact-version coverage using a few representative user-provided fixtures, support more HotA resource variants, improve portrait/custom-hero identity, and add advanced town fields only when their representation and coupling are understood. Animation, batch edits, save comparison and undo history beyond reset/discard remain optional later work. Four-language UI localization is implemented (H3F-024), with native visual/relaunch and human translation review still pending.

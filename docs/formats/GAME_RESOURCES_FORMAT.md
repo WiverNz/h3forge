@@ -389,7 +389,7 @@ H3F-006 partial; cross-checked against the
 table, external display reference).
 
 Container: `TwCrPort.def` inside `H3sprite.lod` (151 frames, all compression
-1, canvas 58×64). Frame names follow `CPrL{id:03}{suffix}.pcx`; the suffix is
+1, canvas 58×64). Frame names normally follow `CPrL{id:03}{suffix}.pcx`; the suffix is
 determined by the creature ID range:
 
 | ID range | Suffix |
@@ -409,7 +409,21 @@ IDs outside these ranges (including blanks, war machines and reserved
 entries) have no frame and resolve to a placeholder. **141 standard creature
 IDs resolve.**
 
+Correction verified 2026-11-14: the Inferno portrait numbers are not creature
+IDs for Gog/Magog and Hell Hound/Cerberus. IDs 44, 45, 46, 47 resolve to
+`CPrL046I.pcx`, `CPrL047I.pcx`, `CPrL044I.pcx`, `CPrL045I.pcx`, respectively.
+Local frame inspection and Xyron's supplied native screenshot establish the
+identities; the standard PNG CRC-32 values are `e83e6686`, `40aadf17`,
+`81da69e4`, `aff3baad` in that creature-ID order. This is artwork mapping,
+not a permutation of saved army slots.
+
 ### E.1 HotA creature portraits (VERIFIED_IN_H3FORGE, 2026-11-10)
+
+The `id+2` rule below uses the corrected portrait number for IDs 44..47:
+their D32F frame indices are 48, 49, 46, 47, respectively. Visual inspection
+on 2026-11-14 confirmed the same Inferno exception in both containers.
+The original comparison established correspondence between the containers,
+but did not establish that those four portrait numbers equal creature IDs.
 
 HotA 1.8 ships full creature artwork (base + HotA-exclusive IDs 0–199) in the
 `HotA.lod` D32F container `eb1f19b13b23e32ded0fd482e7266b54` - 202 frames,

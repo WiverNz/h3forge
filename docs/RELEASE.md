@@ -111,7 +111,10 @@ gate, as recorded in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
   development server, Node, Python, Rust, mmarch or loose frontend files.
 - Check native icon/taskbar, four languages, relaunch persistence, placement
   beside a disposable game installation and manual selection from elsewhere.
-- On copied saves, edit/save/reopen, verify backups and load in the matching game.
+- Record per-operation game results in [MANUAL_COMPATIBILITY.md](MANUAL_COMPATIBILITY.md).
+  The reported hero/tent passes are recorded there; untested operations remain open.
+  On copied saves, verify the release artifact's edit/save/reopen and backup recovery
+  paths separately. The manual report did not identify a release build or Save mode.
 - Check missing WebView2 behavior on a disposable machine. Do not uninstall it
   from the development machine just for this test.
 - Compare SHA-256, inspect PE imports/resources, and confirm only the two named

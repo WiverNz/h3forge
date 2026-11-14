@@ -1,5 +1,35 @@
 # Repository and format research
 
+## Manual compatibility update (recorded 2026-11-14)
+
+The user confirms that hero army composition, visited tent states, artifact
+addition, secondary skill replacement/addition, current mana, known spells and
+all four primary attributes worked in actual HotA. This is independent manual
+evidence, not a parser-test inference. Exact version, save filename, build and
+artifact placement were not supplied. See [MANUAL_COMPATIBILITY.md](MANUAL_COMPATIBILITY.md)
+for individual results and remaining gates. Historical sample IDs, offsets and
+hashes below must not be assigned to this report.
+
+## Xyron army ordering correction (2026-11-14)
+
+Verified in the current `games/SaAndVla.GM2` via an ignored copy: Xyron's
+hero record starts at payload offset 4,307,390. The seven `(creature ID,
+quantity)` pairs are `(43,1418), (45,5080), (47,6880), (49,230), (51,116),
+(53,5008), (55,2251)`. The supplied game screenshot agrees with this
+left-to-right quantity order, rather than the request's slot-2/3 description.
+Existing ID/count offsets (record +113/+141, four-byte stride) are correct.
+Each of the seven count edits round-trips with no other payload changes.
+
+Root cause of the apparent creature swap: standard portrait numbers 44/45
+contain hounds and 46/47 contain gogs, unlike creature IDs. Local decoded
+frames establish the same exception for HotA's portrait-number-plus-two
+mapping. The earlier cross-container comparison was not independent proof
+of creature identity for these four frames. Corrected shared artwork lookup;
+see [resource specification](formats/GAME_RESOURCES_FORMAT.md#e-creature-portraits).
+The shared editor now presents a single horizontal slot row, scrolling on
+narrow panels, without permuting DTOs or edit indices. Army composition now has a user-reported HotA pass; the exact Xyron
+fixture, slot-by-slot edits and new native layout were not identified in that report.
+
 Investigated 2026-11-08. This document distinguishes **observations**, **inferences**, and **unresolved work**. No builds, dependency installations, upstream test suites, application implementation, save writes, or archive writes were performed. Small standard-library Python probes were research tools only; H3Forge will not embed or require Python. They evaluated selected source constants without importing the wxPython application, decompressed the sample in memory, and read archive directories/selected entry headers. No game data was extracted to disk.
 
 ## Source provenance
@@ -127,8 +157,8 @@ Classification: **VERIFIED** = parsed by H3Forge with sample evidence (or, for w
 | Learned / available spells | 242 / 312, 70 flag bytes; coupled rule ported from `spells.py:serialize` | h3sed | VERIFIED | **VERIFIED** (learned + available-with-spellbook; artifact-grant caveat documented) | Spell Scroll grants not decoded; map-banned spells preserved by never normalizing | - |
 | Spellbook / war machines | equipment slots 17/13/14/15/16, ID word + sentinel | h3sed `stats.py` | VERIFIED (carried detection; machines decode as unknown-named IDs 3–6) | not exposed (read-only by design) | artifact IDs not verified for 3–6; spellbook equipping is an explicit-action candidate later | - |
 | Secondary skills | count 43; mastery 182 (30 bytes); order 1092 | h3sed `skills.py` | VERIFIED | not yet | slot-order table coupling | H3F-010 |
-| Army | IDs 113 / counts 141, 7×u32; empty encodings vary (0 and FF forms) | h3sed `common/army.py` | VERIFIED | **VERIFIED** (exact 44/11, parser/session round trip; in-game unverified) | untouched empty/unknown words preserved; clear writes FF ID + zero count | H3F-009 |
-| Equipment / backpack | 19×8 bytes @382; 64×8 @534; scrolls use two u32 words | h3sed `equipment.py`/`inventory.py` | VERIFIED backpack IDs/scrolls + decoded equipment | **VERIFIED** backpack + wear-slot equip/unequip with attribute-bonus and granted-spell coupling (round-trip inverse on the sample) | combination artifacts/assembly, equipped scrolls, war machines, spellbook stay read-only; reservation bytes 1046–1055 block edits when non-zero; manual game-load gate | H3F-011/012 complete |
+| Army | IDs 113 / counts 141, 7×u32; empty encodings vary (0 and FF forms) | h3sed `common/army.py` | VERIFIED | **VERIFIED** (exact 44/11, parser/session round trip; army composition also user-verified in HotA, test metadata unspecified) | untouched empty/unknown words preserved; clear writes FF ID + zero count | H3F-009 |
+| Equipment / backpack | 19×8 bytes @382; 64×8 @534; scrolls use two u32 words | h3sed `equipment.py`/`inventory.py` | VERIFIED backpack IDs/scrolls + decoded equipment | **VERIFIED** backpack + wear-slot equip/unequip with attribute-bonus and granted-spell coupling (round-trip inverse on the sample) | combination artifacts/assembly, equipped scrolls, war machines, spellbook stay read-only; reservation bytes 1046–1055 block edits when non-zero; artifact addition user-verified in HotA with placement unspecified; equipment coupling retains manual game-load gate | H3F-011/012 complete |
 | Identity / portrait | 10/11/12 (type/class/portrait) | h3svg spec | VERIFIED (H3F-005) | n/a (identity) | - | - |
 | Owner | 0, player 0–7 / 255 | h3sed | VERIFIED | deliberately not exposed | ownership changes have map-wide effects | - |
 | Coordinates X/Y/Z | before the fixed block in profile area (biography caveat); town regex offsets 4–6 for towns | h3sed `profile.py`, h3svg spec | PARTIAL | closed | map object index must stay consistent | H3F-019 |
@@ -242,7 +272,7 @@ FlightTrace is MIT OR Apache-2.0; architectural inspiration alone needs no code 
 
 - Verified against the local MIT h3sed 4.1 source: `metadata.py` creature IDs and `army.count` range 1..u32::MAX; `version/hota.py` additions and Bulwark minor threshold 10; `common/army.py` parse/serialize empty-slot handling. Rust now contains 189 creature choices for exact 44/11 only. Unknown stacks and other formats cannot receive army writes.
 - `is_readonly()` in that shared army plugin blocks **town** edits when a garrison hero owns the army; it does not prohibit the hero's own army edits. No town parsing or linkage writes were introduced. The reference permits an empty army (0–7 stacks); a last-stack prohibition has not been established.
-- One safe session Save As round trip from a private SaAndVla copy (215 heroes) verified replacement/clearing, backup/source identity, discard/revert and a full payload comparison against the intended patches. Core tests independently constrain changes to the selected type/count words and preserve zero/FF empty forms. Game loading and gameplay semantics at extreme quantities remain unverified.
+- One safe session Save As round trip from a private SaAndVla copy (215 heroes) verified replacement/clearing, backup/source identity, discard/revert and a full payload comparison against the intended patches. Core tests independently constrain changes to the selected type/count words and preserve zero/FF empty forms. Army composition is now user-verified in HotA; extreme-quantity gameplay and unlisted variants remain unverified.
 
 ## H3F-006 spell icon evidence (2026-11-09)
 
@@ -254,7 +284,7 @@ FlightTrace is MIT OR Apache-2.0; architectural inspiration alone needs no code 
 
 - Skill ID table verified against h3sed `metadata.IDS` (0x00 Pathfinding .. 0x1B First Aid + HotA 0x1C Interference, 0x1D Runes) - the ported 30-entry table was already ID-ordered; the alphabetical display list was not used as IDs (H3F-006 pattern). Semantics ported from `hero/skills.py` (presence = mastery && slot && slot <= count; serialize = dense one-based renumber + count write) and `version/hota.py` (`skills_slot: 1092`).
 - `HeroEdit::SetSkills` (absolute ordered list) plans only count (43 low byte), mastery (182+id) and order bytes (1092+id); removals zero both bytes of the removed skill; unrecognized entries (zero slot/mastery, slot > count) and the legacy 212..238 region are preserved. Capacity 28 (0x1C) though 30 IDs exist; exact-44/11 1122-byte records only, duplicates/mastery-outside-1-3/unknown IDs rejected.
-- Sample round trip on a private copy (candidate @4,727,078): reorder + Wisdom→Expert + add Logistics produced 7 patches, reopened parse shows exactly `[(Mysticism,1,1), (Intelligence,2,2), (Wisdom,3,3), (Logistics,1,4)]`, payload diff confined to the planned offsets, source untouched. In-game load still pending manual confirmation (same standing gate as H3F-008/009).
+- Sample round trip on a private copy (candidate @4,727,078): reorder + Wisdom→Expert + add Logistics produced 7 patches, reopened parse shows exactly `[(Mysticism,1,1), (Intelligence,2,2), (Wisdom,3,3), (Logistics,1,4)]`, payload diff confined to the planned offsets, source untouched. User-reported HotA results now verify replacement of an existing skill and addition of another. Reordering/mastery changes and this exact fixture remain without manual confirmation.
 
 ### H3F-011 backpack evidence (2026-11-09)
 
@@ -268,8 +298,9 @@ Zero artifact IDs remain ambiguous/read-only in H3Forge. No count-byte
 normalization is performed by the upstream inventory serializer.
 See SAVEGAME_FORMAT.md C.5 and H3F-011 for the verified eight-byte encoding,
 sentinel rules and successful application-level sample round trip. Artifact
-icons remain unmapped placeholders; equipment and game-load acceptance
-remain separate work.
+icons and equipment were subsequently implemented (H3F-012 follow-ups).
+Artifact addition now has a user-reported HotA pass, with placement unspecified;
+scrolls, removal/replacement and equipment coupling remain manually unverified.
 
 
 HotA skill icons follow-up: both local resource sets contain only the same 28 base skill triplets in readable SECSK DEFs. Interference/Runes artwork remains unverified behind the unsupported HotA.lod directory; no readable override found. Detailed directory/frame evidence and the H3F-014 dependency are recorded in GAME_RESOURCES_FORMAT.md, "HotA skill icon investigation".
@@ -417,7 +448,8 @@ now discovers the checkout relative to the EXE, preserving local release safety
 without embedding a source path. A focused read-only guard test passes.
 FlightTrace scripts/workflows were inspected read-only for the version/tag flow;
 its installers and runtime setup were not adopted. Clean-machine, visual,
-placement and matching-game checks remain unresolved. Full results and artifact
+placement and release-artifact checks remain unresolved. Feature-level HotA
+passes are now recorded separately in the manual compatibility checklist. Full results and artifact
 hash: [H3F-017](issues/017-windows-release.md).
 ## H3F-027 - current neutral armies (2026-11-11)
 

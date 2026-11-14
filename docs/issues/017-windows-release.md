@@ -69,7 +69,9 @@ Size: 10,489,344 bytes. SHA-256:
 Only Windows system/UCRT DLL imports were found; no separate MSVC redistributable,
 WebView2Loader DLL, Python or Node DLL is imported. The WebView2 runtime remains
 required. Native window/icon appearance, both placement modes, clean Windows
-10/11, missing-WebView2 behavior and in-game loading remain manual checks.
+10/11 and missing-WebView2 behavior remain manual checks. The later
+[user-reported HotA results](../MANUAL_COMPATIBILITY.md) verify specific hero/tent
+operations, but do not identify or validate this release artifact.
 
 ## Application icon follow-up (2026-11-11)
 

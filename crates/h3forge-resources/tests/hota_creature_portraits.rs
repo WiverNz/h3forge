@@ -1,7 +1,8 @@
 //! Verified HotA creature portraits from the local `HotA.lod` twcrport D32F
 //! container (opt-in via `H3FORGE_FIXTURE_ROOT`; skips without it).
 //! Identification evidence lives in `src/creature_portraits.rs`: creature ID
-//! `i` sits at frame `i + 2`; 94 base portraits match pixel-exactly, 36 more
+//! `i` normally sits at frame `i + 2` (44..47 use the Inferno remap);
+//! 94 base portraits match pixel-exactly, 36 more
 //! within a small channel distance, 11 carry HotA's recolored "portrait fix"
 //! art over the same silhouette. The CRC-32 constants pin the exact encoded
 //! PNG bytes so any resource, decode, or mapping change is caught here.
@@ -42,6 +43,10 @@ const PINNED: &[(u32, Option<u32>)] = &[
 fn frame_index_rule() {
     assert_eq!(hota_creature_frame_index(0), Some(2));
     assert_eq!(hota_creature_frame_index(199), Some(201));
+    assert_eq!(hota_creature_frame_index(44), Some(48));
+    assert_eq!(hota_creature_frame_index(45), Some(49));
+    assert_eq!(hota_creature_frame_index(46), Some(46));
+    assert_eq!(hota_creature_frame_index(47), Some(47));
     for id in [200, 255, u32::MAX] {
         assert_eq!(hota_creature_frame_index(id), None);
     }

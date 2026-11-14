@@ -1,6 +1,27 @@
 # H3F-009 - Edit hero armies and complete the MVP
 
-Status: completed (2026-11-09; automated verification complete, actual in-game compatibility unverified). Milestone: M4. Priority: P0.
+Status: completed (2026-11-09; automated verification complete, army composition verified in HotA by user report recorded 2026-11-14). Milestone: M4. Priority: P0.
+
+Army order follow-up: completed 2026-11-14. The current private SaAndVla
+copy and supplied game screenshot show slot 2 = Magog (ID 45, 5080) and
+slot 3 = Cerberus (ID 47, 6880). This differs from the request's stated
+order. The binary mapping was already correct; incorrect portrait-number
+assumptions exchanged Gog/Magog artwork with Hell Hound/Cerberus artwork.
+Corrected the shared standard/HotA portrait lookup and made the shared army
+editor one left-to-right row, horizontally scrollable on narrow panels.
+Heroes, town armies, garrisoned heroes and map garrisons use these shared
+paths. No parser, slot dispatch, save operation or creature/count value changed.
+
+Focused verification: Xyron's seven actual stacks checked against raw words,
+each quantity edited independently and recompressed/reopened with exact
+full-payload equality outside its four-byte count word. Browser regression:
+300 assertions and 42 real input/blur dispatches across regular/compact
+layouts at 360, 620 and 1200 px. Resource regressions pin the corrected
+four standard portraits and both containers' mapping. One frontend build
+passed. A later user report confirms army composition changes in HotA;
+see the [manual checklist](../MANUAL_COMPATIBILITY.md). The report does not
+identify a save/build, so it does not certify this exact Xyron regression or
+the latest portrait/layout changes in the native window.
 
 ## Goal
 
@@ -48,4 +69,4 @@ Focused tests for one changed slot, both observed empty encodings, invalid count
 - `cargo check --workspace`: passed (one final workspace check).
 - `npm.cmd --prefix web --cache .local/npm-cache run build`: TypeScript and Vite passed (one final frontend build).
 - `cargo fmt --all` and final `git diff --check`: clean.
-- **Not verified:** actual matching-game load, gameplay at extreme quantities, native UI interaction. Parser/session round trips are not in-game compatibility evidence. No other issue started.
+- **Manual update (recorded 2026-11-14):** user-confirmed army composition changes work in HotA. Extreme quantities, all slot/empty variants, town/map garrisons and native layout acceptance are not established by that report. Parser/session round trips remain separate evidence.
