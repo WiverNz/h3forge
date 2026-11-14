@@ -1,6 +1,6 @@
 {
   "productName": "H3Forge",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "identifier": "com.wivernz.h3forge",
   "build": {
     "beforeDevCommand": { "script": "npm run dev", "cwd": "../../../web" },
