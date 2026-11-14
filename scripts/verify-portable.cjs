@@ -1,4 +1,5 @@
 // Build-time inspection only; no Node runtime is shipped with H3Forge.
+// Cargo 1.100 nests build output as build/<package>/<hash>/; older Cargo used build/<package>-<hash>/.
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
@@ -24,7 +25,7 @@ const allowed = /^(index\.html|LICENSES\.txt|theme-init\.js|assets\/index-[\w-]+
 assert.equal(assets.length, 5, 'Unexpected frontend asset count');
 for (const name of assets) assert.match(path.relative('web/dist', name).replaceAll('\\', '/'), allowed);
 const build = 'target/x86_64-pc-windows-msvc/release/build';
-const payloads = fs.readdirSync(build).filter(name => name.startsWith('h3forge-desktop-'))
+const payloads = fs.readdirSync(build).filter(name => name === 'h3forge-desktop' || name.startsWith('h3forge-desktop-'))
   .flatMap(name => files(path.join(build, name)))
   .filter(name => name.includes('tauri-codegen-assets'))
   .map(name => fs.readFileSync(name)).filter(bytes => exe.includes(bytes));
