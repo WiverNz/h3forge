@@ -1137,7 +1137,7 @@ dependencies = [
 
 [[package]]
 name = "h3forge-desktop"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "h3forge-map",
  "h3forge-resources",
@@ -1155,14 +1155,14 @@ dependencies = [
 
 [[package]]
 name = "h3forge-map"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "miniz_oxide 0.9.1",
 ]
 
 [[package]]
 name = "h3forge-resources"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "crc32fast",
  "miniz_oxide 0.9.1",
@@ -1170,7 +1170,7 @@ dependencies = [
 
 [[package]]
 name = "h3forge-save"
-version = "0.1.12"
+version = "0.1.13"
 dependencies = [
  "crc32fast",
  "h3forge-map",
