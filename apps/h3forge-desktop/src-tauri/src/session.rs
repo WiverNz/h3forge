@@ -1494,7 +1494,7 @@ impl AppState {
         let verification = (|| -> Result<SaveDocument, AppErrorDto> {
             let bytes = std::fs::read(&temp_path)
                 .map_err(|error| AppErrorDto::validation_failed(&error.to_string()))?;
-            let reopened = SaveDocument::open(bytes)
+            let reopened = SaveDocument::open_strict(bytes)
                 .map_err(|error| AppErrorDto::validation_failed(&error.to_string()))?;
             if reopened.payload() != payload.as_slice() {
                 return Err(AppErrorDto::validation_failed(

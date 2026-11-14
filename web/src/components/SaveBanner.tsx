@@ -56,6 +56,9 @@ export function SaveBanner({
           {detailsOpen ? t('ui.hideDetails') : t('ui.details')}
         </button>
       </div>
+      {summary.diagnostics.some(d => d.code === 'native-gzip-crc-mismatch') && (
+        <p className="scope-note" role="status">{t('teams.nativeCrc')}</p>
+      )}
       {detailsOpen && (
         <div className="save-banner-details">
           <p className="save-banner-desc">{mapDescription ?? t('ui.noMapDescriptionRecorded')}</p>

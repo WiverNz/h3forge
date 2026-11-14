@@ -41,9 +41,10 @@ payload magic only. VERIFIED_IN_H3FORGE.
 
 ### A.2 Gzip member layout
 
-The whole file is one gzip member (RFC 1952). H3Forge reads it with strict
-integrity checking (`container.rs::decompress_single_member`). All multi-byte
-fields are little-endian.
+The whole file is one gzip member (RFC 1952). H3Forge validates the container
+with a narrow native HotA CRC exception on import (`container.rs::decode`).
+Editor-generated output is reopened with mandatory CRC validation
+(`SaveDocument::open_strict`). All multi-byte fields are little-endian.
 
 | Offset | Size | Field | Meaning |
 |---|---:|---|---|
@@ -55,7 +56,7 @@ fields are little-endian.
 | 9 | 1 | OS | Originating OS; ignored on read, written as 0xFF (unknown). |
 | 10 | * | Optional fields | FEXTRA: u16 length + data. FNAME/FCOMMENT: NUL-terminated strings. FHCRC: u16 low bits of CRC-32 of the header so far (verified). |
 | * | * | DEFLATE stream | Raw deflate payload (RFC 1951). |
-| L−8 | 4 | CRC-32 | CRC-32 of the decompressed payload. Mismatch → `CrcMismatch`. |
+| L−8 | 4 | CRC-32 | CRC-32 of the decompressed payload. Mismatch is a diagnostic only on regular H3SVG 44/11 import; otherwise `CrcMismatch`. Output verification always rejects a mismatch. |
 | L−4 | 4 | ISIZE | Decompressed size modulo 2^32. Mismatch → `IsizeMismatch`. |
 
 Behavioral rules (VERIFIED_IN_H3FORGE, from `container.rs`):
@@ -65,9 +66,24 @@ Behavioral rules (VERIFIED_IN_H3FORGE, from `container.rs`):
 - Decompression is bounded: `Limits::max_compressed` (default 64 MiB) and
   `max_payload` (default 256 MiB); the output buffer grows by doubling and
   never exceeds the cap.
-- Contrast with h3sed: `metadata.py:1371 patch_gzip_for_partial()` monkey-patches
-  Python's gzip to tolerate CRC problems while writing. H3Forge deliberately
-  rejects any CRC/ISIZE failure; integrity failures block the open.
+- Native regular H3SVG 44/11 import accepts a trailer CRC mismatch only after
+  complete bounded DEFLATE decoding, full trailer, matching ISIZE and exact
+  single-member boundary checks. Header CRC, malformed streams, truncation,
+  limits, trailing bytes and multiple members still fail. Other versions and
+  campaign magic retain mandatory trailer CRC validation.
+- This is a compatibility policy, not a way to distinguish all corruption
+  from a native checksum defect. A payload bit change that preserves valid
+  DEFLATE and size may be indistinguishable. A visible localized notice and
+  `native-gzip-crc-mismatch` diagnostic expose this limitation and stored/
+  computed values. Field-specific edit gates remain independent.
+- Original compressed bytes are retained verbatim for backups. Output gets
+  a correct CRC/ISIZE and is strictly reopened before replacement. The native
+  import exception cannot be used to pass temporary-output verification.
+- Evidence: the [h3svg compression specification](https://github.com/alexanderbelous/h3mtxt/blob/h3svg/doc/h3svg_specification.MD#compression)
+  documents native invalid CRCs; H3SED's `metadata.py:1371` tolerates them on
+  reads. Four supplied HotA 44/11 saves have complete streams and correct
+  ISIZE but invalid CRCs. The bounded exception replaces H3Forge's previous
+  unconditional rejection as part of H3F-030. No reference file is repaired.
 
 ### A.3 Compressed-file vs payload offsets
 
@@ -451,15 +467,15 @@ the HotA 44/11 sample (all 37 sample towns, cross-checked against the source
 | 66 | 1 | visiting_hero | enum HeroType of the visiting hero or 0xFF (h3svg `Town.visiting_hero`); does not block garrison edits | VERIFIED_IN_H3FORGE |
 | 67 | 1 | mage guild level | 0-5, read-only | VERIFIED_IN_H3FORGE |
 | 68 | 1 | - | unknown | UNKNOWN |
-| 69 | 2 | name length | u16 LE, 1-14 | VERIFIED_IN_H3FORGE |
-| 71 | n | name | legacy single-byte text, not NUL-terminated | VERIFIED_IN_H3FORGE |
+| 69 | 2 | name length | u16 LE; reader supports 1-16, not a claimed format maximum | VERIFIED_IN_H3FORGE |
+| 71 | n | name | legacy single-byte text, not NUL-terminated; FF is valid CP1251 "я" | VERIFIED_IN_H3FORGE |
 | 71+n | 496 | - | recruits, building masks, Mage Guild spells, HotA extras; see D.1 | partly VERIFIED_IN_H3FORGE, rest byte-preserved |
 
-Record length is `567 + name_len` (568-581), learned from dense adjacency
+Record length is `567 + name_len` (supported 568-583), learned from dense adjacency
 exactly as h3sed adjusts `BYTES_MINLEN`: every record but the last ends where
 the next begins (sample: 37/37 exact); the last record's end is computed from
 the learned fixed length. Discovery is bounded to the region before the hero
-array (`first_hero_start - 48*581 - 100` .. `first_hero_start`), candidates
+array (`first_hero_start - 48*583 - 100` .. `first_hero_start`), candidates
 run cheap structural checks first (owner byte, type <= 11, coordinate range,
 garrison word shape `b 00/FF 00/FF 00/FF`, name length and content), and
 secondary verification replays h3sed's army checks: whole-section blankness
@@ -1681,3 +1697,68 @@ it is not claimed to be this pair's exact scenario and is never a write anchor.
 Sources: [h3svg SavedGame specification](https://github.com/alexanderbelous/h3mtxt/blob/h3svg/doc/h3svg_specification.MD)
 and [KeymastersTentType enum](https://github.com/alexanderbelous/h3mtxt/blob/h3svg/src/h3mtxt/SavedGame/Constants/KeymastersTentType.h).
 These are format facts only; no third-party implementation was copied.
+
+## H3F-030 - Initialized teams and native CRC evidence (2026-11-14)
+
+Status: verified initialization comparison, not verified ongoing alliance editing.
+The supplied Crimson and CloverA_blue_in_2_team.h3m puts Blue in zero-based
+team 1; the original Crimson and CloverA.h3m puts Blue in team 0. Both have
+two teams. Rust map parsing confirms the other playable colors retain teams:
+Red 0, Tan/Orange 1. The copied map also has a longer name and was converted
+from RoE map format 14 to HotA format 32, so it is not a one-byte H3M diff.
+
+A bounded research walk through the GM2 name/description, eight player specs,
+normal victory/loss bytes, team count/array, zero custom-hero count and
+starting-settings section corroborates the initialized team fields:
+
+| Save | Count offset/value | Assignment offsets | Zero-based assignment bytes |
+|---|---|---|---|
+| same_teams, same_teams_restart, separate_teams | 474 / 2 | 475..482 | 0,0,1,0,1,0,0,0 |
+| separate_team_map_2 | 476 / 2 | 477..484 | 0,1,1,0,1,0,0,0 |
+
+The two-byte shift follows the longer map name; Blue changes from 0 at 476
+in the old sample to 1 at 478 in the new sample. These are sample-specific
+payload offsets, not constants for production parsing. The research walk is
+restricted to this day-1 normal-victory/loss layout. Current alliance authority,
+team-related duplicates/caches and sharing updates remain unverified. No team
+writer or general-purpose header parser was added. No whole-save serialization
+or original H3M edits are involved.
+
+The new save is 79,999 compressed bytes / 580,032 payload bytes, SHA-256
+9594a96725e5f692274aced96efd0e6db42d6e30cf43ee81587d3b40ff3342ad.
+Stored/computed CRC32: EB55EEF7 / F8EAE189. The previous three native CRC
+pairs are 51023D2A / 3C8830CD, E933111B / 74EA2243, 131D5339 / 13A89BC7.
+See A.2 for the narrow import exception and mandatory strict output checks.
+
+All four now open with 215 heroes. Existing town discovery returns 2 towns
+and no verified player table for same_teams and separate_teams; it returns
+6 towns and 8 players for same_teams_restart and separate_team_map_2. No
+additional parser assumption was introduced to force missing player records.
+The checksum exception alone does not grant player editing support.
+
+### H3F-030 town/player discovery correction
+
+Verified in the supplied native 44/11 saves: town names are length-prefixed
+legacy text, so FF is not a string terminator. In same_teams.GM2 the third
+town at 299111 has the 14-byte CP1251 name "Упавшая Звезда", including FF.
+In separate_teams.GM2 the third town at 299119 has the 16-byte name
+"Забытая Крепость", also including FF. The inherited name grammar rejected
+both, ending the dense town scan after two records. Player discovery then
+correctly rejected the incomplete town table because its declared count is 6.
+
+The bounded reader now permits names through 16 bytes and FF text bytes.
+This is the evidenced supported range, not a claim about all possible names.
+Names still reject control bytes, leading spaces, out-of-range lengths and
+nonzero high length bytes. Record/name reads respect both the payload end
+and hero-section boundary; partial records are not clamped into valid spans.
+Town garrison, coordinate and ownership checks are unchanged. The player
+parser still requires the full count, contiguous towns, eight color IDs and
+verified hero/town ownership links. No player resource offsets changed.
+
+All four supplied saves now yield 6 high-confidence towns and 8 resource-editable
+player slots. Across these fixtures, 224 independent resource edits preserve
+every payload byte outside the selected documented four-byte word, including
+all other players and team data. Save As/Save, backups and source-change rejection
+pass through the application session. Existing larger-sample cross-validation
+also passes with 48 map/save towns, all names, positions and fixed factions
+matched. This supersedes the earlier H3F-030 observation of missing players.

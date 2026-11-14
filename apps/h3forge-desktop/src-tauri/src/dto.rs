@@ -391,6 +391,7 @@ pub struct DiagnosticDto {
 impl From<&Diagnostic> for DiagnosticDto {
     fn from(diagnostic: &Diagnostic) -> Self {
         let code = match diagnostic.code {
+            h3forge_save::DiagnosticCode::NativeGzipCrcMismatch => "native-gzip-crc-mismatch",
             h3forge_save::DiagnosticCode::MapMetadataNotFound => "map-metadata-not-found",
             h3forge_save::DiagnosticCode::UnrecognizedVersion => "unrecognized-version",
             h3forge_save::DiagnosticCode::HeroScanNotImplemented => "hero-scan-not-implemented",

@@ -61,6 +61,8 @@ pub struct Diagnostic {
 /// Categories of document-level diagnostics.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiagnosticCode {
+    /// Native 44/11 import exception; all other container checks passed.
+    NativeGzipCrcMismatch,
     /// Map name/description fields were not found in the header window.
     MapMetadataNotFound,
     /// The container is recognized but the version bytes match no researched
@@ -101,10 +103,32 @@ impl SaveDocument {
 
     /// Opens a save with explicit resource limits.
     pub fn open_with_limits(original: Vec<u8>, limits: Limits) -> Result<Self, SaveError> {
-        let payload = container::decompress_single_member(&original, limits)?;
+        Self::open_container(original, limits, true)
+    }
+
+    /// Reopen editor-generated output with mandatory CRC validation.
+    pub fn open_strict(original: Vec<u8>) -> Result<Self, SaveError> {
+        Self::open_container(original, Limits::default(), false)
+    }
+
+    fn open_container(
+        original: Vec<u8>,
+        limits: Limits,
+        allow_native_crc: bool,
+    ) -> Result<Self, SaveError> {
+        let decoded = container::decode(&original, limits, allow_native_crc)?;
+        let payload = decoded.payload;
         let format = detect(&payload)?;
         let map = parse::parse_map_metadata(&payload);
         let mut diagnostics = Vec::new();
+        if let Some((stored, computed)) = decoded.crc_mismatch {
+            diagnostics.push(Diagnostic {
+                code: DiagnosticCode::NativeGzipCrcMismatch,
+                message: format!(
+                    "Native HotA 44/11 gzip CRC mismatch: stored 0x{stored:08X}, computed 0x{computed:08X}. Complete stream and size verified; CRC cannot establish payload integrity. Original bytes retained; saved output uses a valid CRC."
+                ),
+            });
+        }
         if !map.is_found() {
             diagnostics.push(Diagnostic {
                 code: DiagnosticCode::MapMetadataNotFound,

@@ -535,3 +535,75 @@ counts are 469 wandering groups and 46 garrisons; earlier supplied counts are
 1,119 and 46. Differences do not establish defeat/removal history. See
 [H3F-027](issues/027-neutral-creatures.md) and
 [SAVEGAME_FORMAT.md](formats/SAVEGAME_FORMAT.md) for evidence and regressions.
+
+## H3F-030 - Team reassignment evidence gate (2026-11-14)
+
+Revisited h3svg TeamsInfo, H3save_reader compendium/header parser, H3API
+H3MapInfo/H3Main/H3Player/H3PlayersInfo and H3Forge player parsing. Classic
+team count/assignments and process-memory team fields are external evidence,
+not verified current HotA 44/11 alliance serialization. No new save offset
+was verified. The historical candidate at 527 remains read-only research.
+
+Current teams, sharing and victory/loss consistency are unresolved. The user
+confirmed no native mid-game alliance action exists; the impossible paired
+native-action request is withdrawn. Two freshly started games differing only
+in Blue joining Red, plus their copied maps, were requested as initialization
+evidence only. RNG/generated state must be separated from team-related changes.
+Load/use evidence and disposable later-game merge/split validation remain needed.
+
+Players General exposes a disabled current-save selector in four languages;
+authored H3M relationships retain their provenance. No team edit command exists.
+See [H3F-030](issues/030-player-teams-alliances.md) for the dependency audit,
+controlled comparison, verification results and remaining acceptance gates.
+
+### H3F-030 supplied comparison: player slot versus color team
+
+The three user-supplied 44/11 saves (same_teams, same_teams_restart,
+separate_teams) and two setup screenshots change Player2 from Blue to Tan,
+not Red/Blue's displayed alliance. All three payloads share bytes [0,495),
+including the candidate count/assignment sequence at 474..482:
+2 / [0,0,1,0,1,0,0,0]. Read-only Rust parsing of the local named map agrees.
+Starting faction/hero candidates change for Blue/Tan, as the screenshots show.
+The restart also differs in length, so raw aligned diffs cannot identify
+team-dependent state. These observations do not promote candidates to verified
+current-alliance fields or enable writes.
+
+All three have complete DEFLATE streams and correct size trailers but mismatched
+CRC32; inspection used explicit research-only decompression of private copies.
+The production strict reader remains unchanged. See H3F-030 for hashes, counts,
+exact comparison limitations and the corrected request: keep Player2 as Blue
+and change Blue's team in a copied map, supplying both map variants.
+
+### H3F-030 new map pair and native import fix
+
+The supplied blue_in_2_team map and separate_team_map_2.GM2 now provide a real
+initialized color-team change. Rust map parsing verifies Blue's zero-based
+team 0 -> 1. A bounded research header walk finds the corresponding GM2
+assignment at old offset 476 / new offset 478; the new name adds two bytes.
+The map was also converted from RoE to HotA and random AI state differs.
+This establishes initialization fields, not all ongoing-game update rules.
+The earlier request for a changed map pair is fulfilled; do not ask for it again.
+Shared vision, puzzle progress, victory/loss and runtime alliance authority
+remain gates on team editing. See SAVEGAME_FORMAT.md and H3F-030.
+
+The native CRC blocker is fixed for regular H3SVG 44/11 import only. Four
+native samples plus h3svg's compression notes support accepting a CRC mismatch
+with a visible diagnostic, while requiring complete bounded DEFLATE, correct
+ISIZE and one exact member. Unlike H3SED's broad gzip EOF override, other
+versions, header CRC failures, truncated streams and size failures are rejected.
+CRC cannot distinguish all valid-stream corruption from the native defect;
+this limitation is explicit. Output is always written with valid CRC/ISIZE
+and reopened strictly before replacement. Original compressed backups survive.
+No original save or map was changed.
+
+### H3F-030 follow-up: localized town names restore player discovery
+
+Completed the requested town/player discovery repair. Native names containing
+CP1251 FF ("я") and a verified 16-byte town name were rejected by the inherited
+14-byte/no-FF heuristic. Accepting these bounded names restores all six towns
+and eight player slots in each supplied save. Resource/ownership gates remain
+unchanged. Added truncated-span guards and regressions: 224 isolated resource
+roundtrips, session persistence/revert/discard/backups/source-change checks,
+synthetic rejection cases and the current 48-town map/save cross-check pass.
+See H3F-030 and SAVEGAME_FORMAT.md for exact offsets and limits. No implication
+of team reassignment support; its independent consistency gates remain closed.

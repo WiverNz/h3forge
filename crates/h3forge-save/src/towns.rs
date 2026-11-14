@@ -16,8 +16,8 @@
 
 use std::ops::Range;
 
-use crate::definitions::towns::*;
 use crate::definitions::HERO_SCAN_START;
+use crate::definitions::towns::*;
 
 /// Why a record is not a confirmed town record.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -65,7 +65,7 @@ impl LocatedTown {
 /// the scan above; without heroes the whole payload after `HERO_SCAN_START`
 /// is searched.
 pub fn locate_towns(payload: &[u8], first_hero_start: Option<usize>) -> Vec<LocatedTown> {
-    let max_pos = first_hero_start.unwrap_or(payload.len());
+    let max_pos = first_hero_start.unwrap_or(payload.len()).min(payload.len());
     let mut pos = match first_hero_start {
         Some(hero_start) => hero_start
             .saturating_sub(TOWNS_MAX * RECORD_MAX + 100)
@@ -86,12 +86,17 @@ pub fn locate_towns(payload: &[u8], first_hero_start: Option<usize>) -> Vec<Loca
         if town_start + fixed_len > max_pos {
             break; // Reached the heroes section.
         }
-        let record = &payload[town_start..town_start + fixed_len + NAME_MAX];
-        let name_len = record[NAME_LEN] as usize;
+        let name_len = payload[town_start + NAME_LEN] as usize;
         if name_len == 0 || name_len > NAME_MAX {
             pos = town_start + 1;
             continue;
         }
+        let Some(record) = payload
+            .get(town_start..town_start + fixed_len + name_len)
+            .filter(|_| town_start + fixed_len + name_len <= max_pos)
+        else {
+            break; // Never expose a partially truncated record.
+        };
         let name = &record[NAME..NAME + name_len];
         if !name_valid(name) {
             pos = town_start + 1;
@@ -142,7 +147,10 @@ pub fn locate_towns(payload: &[u8], first_hero_start: Option<usize>) -> Vec<Loca
                 towns[0].span.end = town_start;
             }
         }
-        let span_end = (town_start + fixed_len + name_len).min(max_pos);
+        let span_end = town_start + fixed_len + name_len;
+        if span_end > max_pos {
+            break;
+        }
         towns.push(LocatedTown {
             span: town_start..span_end,
             verified: true,
@@ -180,9 +188,10 @@ fn find_candidate(payload: &[u8], pos: usize, max_pos: usize) -> Option<usize> {
         let mut army_shape_ok = true;
         for slot in 0..GARRISON_SLOTS {
             let at = GARRISON_IDS + slot * 4;
-            if record.get(at..at + 4).is_none_or(|word| {
-                !word[1..].iter().all(|&byte| byte == 0 || byte == 0xFF)
-            }) {
+            if record
+                .get(at..at + 4)
+                .is_none_or(|word| !word[1..].iter().all(|&byte| byte == 0 || byte == 0xFF))
+            {
                 army_shape_ok = false;
                 break;
             }
@@ -191,8 +200,11 @@ fn find_candidate(payload: &[u8], pos: usize, max_pos: usize) -> Option<usize> {
             offset += 1;
             continue;
         }
-        // Name length: u16 LE, 1..=14, high byte zero.
-        if record[NAME_LEN] == 0 || record[NAME_LEN + 1] != 0 {
+        // Name length: bounded u16 LE, high byte zero for supported names.
+        if record[NAME_LEN] == 0
+            || record[NAME_LEN] as usize > NAME_MAX
+            || record[NAME_LEN + 1] != 0
+        {
             offset += 1;
             continue;
         }
@@ -200,6 +212,9 @@ fn find_candidate(payload: &[u8], pos: usize, max_pos: usize) -> Option<usize> {
         let Some(name) = record.get(NAME..NAME + name_len) else {
             return None; // Ran out of payload.
         };
+        if offset + NAME + name_len > limit {
+            return None;
+        }
         if !name_valid(name) {
             offset += 1;
             continue;
@@ -209,13 +224,14 @@ fn find_candidate(payload: &[u8], pos: usize, max_pos: usize) -> Option<usize> {
     None
 }
 
-/// h3sed town name grammar: first byte above 0x20 (and not 0xFF), remaining
-/// bytes at least 0x20 (and not 0xFF), at most 14 bytes total.
+/// Length-prefixed legacy text, not a sentinel-terminated string. In CP1251,
+/// 0xFF is the letter "я" and must survive verbatim. Control bytes and leading
+/// spaces still reject a heuristic candidate; NAME_MAX bounds the length.
 fn name_valid(name: &[u8]) -> bool {
     !name.is_empty()
         && name[0] > 0x20
-        && name[0] != 0xFF
-        && name[1..].iter().all(|&byte| byte >= 0x20 && byte != 0xFF)
+        && name.len() <= NAME_MAX
+        && name[1..].iter().all(|&byte| byte >= 0x20)
 }
 
 /// Secondary verification h3sed applies to each structural match
@@ -224,9 +240,8 @@ fn name_valid(name: &[u8]) -> bool {
 /// record failing these stays a low-confidence candidate; h3sed drops it
 /// from the town list entirely, H3Forge keeps it visible but unverified.
 fn secondary_checks(record: &[u8]) -> Vec<TownRejectReason> {
-    let word = |offset: usize| -> [u8; 4] {
-        record[offset..offset + 4].try_into().expect("checked")
-    };
+    let word =
+        |offset: usize| -> [u8; 4] { record[offset..offset + 4].try_into().expect("checked") };
     // Whole-section check: every garrison ID byte 0xFF vs every count byte
     // 0x00/0xFF must agree on blankness.
     let ids_blank = (0..GARRISON_SLOTS).all(|slot| word(GARRISON_IDS + slot * 4) == [0xFF; 4]);
@@ -315,7 +330,10 @@ mod tests {
         assert!(towns.iter().all(|town| town.verified));
         // First span adjusted to adjacency: RECORD_FIXED + 5 / + 4.
         assert_eq!(towns[0].span, start..start + RECORD_FIXED + 5);
-        assert_eq!(towns[1].span, start + RECORD_FIXED + 5..start + 2 * RECORD_FIXED + 9);
+        assert_eq!(
+            towns[1].span,
+            start + RECORD_FIXED + 5..start + 2 * RECORD_FIXED + 9
+        );
     }
 
     #[test]
@@ -338,6 +356,56 @@ mod tests {
                 .contains(&TownRejectReason::GarrisonInconsistent)
         );
         assert!(towns[1].verified);
+    }
+
+    #[test]
+    fn legacy_names_preserve_ff_and_sixteen_bytes_in_dense_table() {
+        // CP1251 "Упавшая Звезда" and "Забытая Крепость", from native saves.
+        let names: [&[u8]; 4] = [
+            b"Alpha",
+            b"\xD3\xEF\xE0\xE2\xF8\xE0\xFF \xC7\xE2\xE5\xE7\xE4\xE0",
+            b"\xC7\xE0\xE1\xFB\xF2\xE0\xFF \xCA\xF0\xE5\xEF\xEE\xF1\xF2\xFC",
+            b"Omega",
+        ];
+        let start = 40_000;
+        let mut at = start;
+        let mut records = Vec::new();
+        for name in names {
+            let record = craft_town(name, 0, 2, 6, 7, 0);
+            let len = record.len();
+            records.push((at, record));
+            at += len;
+        }
+        let payload = embed(&records, at + 25);
+        let towns = locate_towns(&payload, Some(at + 25));
+        assert_eq!(towns.len(), records.len());
+        for (town, (offset, record)) in towns.iter().zip(records) {
+            assert!(town.verified);
+            assert_eq!(town.span, offset..offset + record.len());
+            let len = record[NAME_LEN] as usize;
+            assert_eq!(
+                &payload[town.span.start + NAME..town.span.start + NAME + len],
+                &record[NAME..NAME + len]
+            );
+        }
+    }
+
+    #[test]
+    fn bounded_names_and_truncated_records_do_not_panic_or_become_verified() {
+        for name in [b"Name\0bad".as_slice(), b" Leading", b"0123456789abcdefg"] {
+            let start = 40_000;
+            let payload = embed(&[(start, craft_town(name, 0, 2, 6, 7, 0))], start + 1000);
+            assert!(locate_towns(&payload, Some(start + 1000)).is_empty());
+        }
+        let start = 40_000;
+        let record = craft_town(b"Alpha", 0, 2, 6, 7, 0);
+        let payload = embed(&[(start, record)], start + 1000);
+        // Complete candidate name but incomplete record; the slice cannot
+        // reach beyond either the payload or the supplied section boundary.
+        for end in [start + NAME + 5, start + RECORD_FIXED_INITIAL + 1] {
+            assert!(locate_towns(&payload[..end], None).is_empty());
+            assert!(locate_towns(&payload, Some(end)).is_empty());
+        }
     }
 
     #[test]

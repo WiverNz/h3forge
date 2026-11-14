@@ -102,3 +102,11 @@ desktop process to load the corrected capability manifest.
 The native follow-up also exposed the navigation button still carrying its
 old disabled/planned markup despite the panel being wired. Replaced it with
 an enabled button selecting the Players section. Rebuilt frontend and desktop.
+
+## Native team-fixture discovery follow-up
+
+H3F-030 fixes localized town discovery that prevented player-table validation.
+All four supplied saves now expose all eight resource-editable slots. The
+existing resource planner and safety gates are unchanged. All 224 isolated
+resource roundtrips and application persistence checks pass; see
+[H3F-030](030-player-teams-alliances.md#requested-townplayer-discovery-fix-2026-11-14).

@@ -156,12 +156,18 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
         <section className="player-general" role="tabpanel" id="player-General" aria-labelledby="tab-General" hidden={tab !== 'General'}>
           <p className="scope-note">{t(player.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}</p>
           <dl className="player-facts">
+            <dt><label htmlFor="current-player-team">{t('teams.current')}</label></dt><dd>
+              <select id="current-player-team" disabled value="unknown" aria-describedby="team-edit-blocker">
+                <option value="unknown">{t('ui.unknown')}</option>
+              </select>
+            </dd>
             <dt>{t('ui.currentController')}</dt><dd title={t('messages.controller')}>{player.details.controller ?? t('ui.unknownSaveFieldsUnverified')}</dd>
             <dt>{t('ui.mapEligibility')}</dt><dd>{eligibility(player.details.eligibility)}</dd>
             <dt>{t('ui.mapTeam')}</dt><dd>{player.details.team !== null ? t('ui.teamValue', { value1: player.details.team }) : player.details.mapLinked ? t('ui.noAuthoredTeam') : t('ui.unknown')}</dd>
             <dt>{t('ui.mapAllies')}</dt><dd>{colorNames(player.details.allies)}</dd>
             <dt>{t('ui.mapEnemies')}</dt><dd>{colorNames(player.details.enemies)}</dd>
           </dl>
+          <p id="team-edit-blocker" className="scope-note">{t('teams.blocked')}</p>
           <p className="scope-note">{t(player.details.mapLinked ? 'messages.teamLinked' : 'messages.teamMissing')}</p>
           <div className="player-starting">
             <div className="player-start-card">

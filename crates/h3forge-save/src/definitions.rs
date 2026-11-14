@@ -340,12 +340,14 @@ pub mod towns {
     pub const VISITING_HERO: usize = 66;
     /// Mage guild level 0-5 (h3svg `Town.mage_guild_level`); read-only.
     pub const MAGE_GUILD_LEVEL: usize = 67;
-    /// Name length, u16 little-endian (1-14).
+    /// Name length, u16 little-endian (verified bounded range 1-16).
     pub const NAME_LEN: usize = 69;
     /// Name bytes (not NUL-terminated).
     pub const NAME: usize = 71;
-    /// Maximum name length (h3sed `DATA_RANGES["town.namelen"]`).
-    pub const NAME_MAX: usize = 14;
+    /// Verified name-length bound. Native Russian HotA names exceed h3sed's
+    /// inherited 14-byte limit: "Забытая Крепость" is 16 CP1251 bytes.
+    /// This is a conservative reader limit, not a claimed format maximum.
+    pub const NAME_MAX: usize = 16;
     /// Maximum town type byte (HotA through Bulwark).
     pub const TYPE_MAX: u8 = 11;
     /// Maximum coordinate byte (h3sed TOWN_REGEX).
@@ -356,7 +358,7 @@ pub mod towns {
     /// h3sed's generic initial `town.bytelen` minimum, before adjacency
     /// learning; only the first span of a section can carry it.
     pub const RECORD_FIXED_INITIAL: usize = 546;
-    /// Longest possible record.
+    /// Longest supported record under the verified name-length bound.
     pub const RECORD_MAX: usize = RECORD_FIXED + NAME_MAX;
     /// Upper bound for the town count search heuristic (h3sed
     /// `DATA_RANGES["town.count"]`).

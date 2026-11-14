@@ -1,5 +1,10 @@
 import type { Catalog } from '../types';
 export const de = {
+  "teams": {
+    "nativeCrc": "Mit der Prüfsummen-Ausnahme für native HotA-Spielstände geöffnet. Der Datenstrom ist vollständig, aber seine Prüfsumme bestätigt die Datenintegrität nicht. Beim Speichern wird eine gültige Prüfsumme erzeugt.",
+    "current": "Team (aktueller Spielstand)",
+    "blocked": "Teamwechsel sind nicht verfügbar: Aktuelle Allianzen, gemeinsame Sicht und Sieg-/Niederlagenregeln sind nicht verifiziert. Die Beziehungen unten stammen aus der ursprünglichen Karte."
+  },
   "lists": {
     "sort": "Sortieren",
     "filter": "Filter",

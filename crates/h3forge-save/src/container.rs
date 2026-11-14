@@ -1,10 +1,8 @@
 //! gzip save container: bounded, integrity-checked single-member decoding.
 //!
-//! Unlike h3sed (`metadata.patch_gzip_for_partial`), which monkey-patches
-//! Python gzip to tolerate CRC problems while writing, H3Forge validates the
-//! CRC-32 and ISIZE trailer up front: any integrity failure blocks the open,
-//! and multi-member or trailing-data containers are rejected explicitly
-//! rather than skipped silently (research: RESEARCH.md "H3SED architecture").
+//! Native HotA 44/11 saves can carry an incorrect CRC-32. Import may report
+//! that exception while retaining every other container check. Output
+//! verification always requires the CRC to match. See SAVEGAME_FORMAT.md A.2.
 
 use miniz_oxide::inflate::TINFLStatus;
 use miniz_oxide::inflate::core::inflate_flags::TINFL_FLAG_USING_NON_WRAPPING_OUTPUT_BUF;
@@ -40,9 +38,24 @@ const FNAME: u8 = 0x08;
 const FCOMMENT: u8 = 0x10;
 const RESERVED_FLAGS: u8 = 0xE0;
 
-/// Decompresses a single-member gzip save, validating header, CRC-32 and
-/// ISIZE trailer, and rejecting multi-member or trailing-data input.
+#[cfg(test)]
 pub fn decompress_single_member(input: &[u8], limits: Limits) -> Result<Vec<u8>, SaveError> {
+    Ok(decode(input, limits, false)?.payload)
+}
+
+pub(crate) struct Decoded {
+    pub payload: Vec<u8>,
+    /// Stored and computed CRC, only for the exact supported native exception.
+    pub crc_mismatch: Option<(u32, u32)>,
+}
+
+/// The import exception is deliberately limited to regular H3SVG 44/11.
+/// It is not evidence that a mismatching payload is otherwise uncorrupted.
+pub(crate) fn decode(
+    input: &[u8],
+    limits: Limits,
+    allow_native_crc: bool,
+) -> Result<Decoded, SaveError> {
     if input.len() > limits.max_compressed {
         return Err(SaveError::InputTooLarge {
             limit: limits.max_compressed,
@@ -69,7 +82,7 @@ pub fn decompress_single_member(input: &[u8], limits: Limits) -> Result<Vec<u8>,
     let data_start = skip_header_optional_fields(input, flags)?;
     let (payload, consumed) = inflate_bounded(&input[data_start..], limits.max_payload)?;
     let trailer_at = data_start + consumed;
-    validate_trailer(input, trailer_at, &payload)?;
+    let crc_mismatch = validate_trailer(input, trailer_at, &payload)?;
     let member_end = trailer_at + GZIP_TRAILER_LEN;
     if member_end < input.len() {
         let rest = &input[member_end..];
@@ -78,7 +91,17 @@ pub fn decompress_single_member(input: &[u8], limits: Limits) -> Result<Vec<u8>,
         }
         return Err(SaveError::TrailingData { offset: rest.len() });
     }
-    Ok(payload)
+    if let Some((expected, actual)) = crc_mismatch {
+        let native_44_11 = payload.starts_with(b"H3SVG")
+            && payload.get(8..16) == Some(&[44, 0, 0, 0, 11, 0, 0, 0]);
+        if !allow_native_crc || !native_44_11 {
+            return Err(SaveError::CrcMismatch { expected, actual });
+        }
+    }
+    Ok(Decoded {
+        payload,
+        crc_mismatch,
+    })
 }
 
 /// Parses optional gzip header fields and returns the offset of the DEFLATE stream.
@@ -121,18 +144,16 @@ fn skip_header_optional_fields(input: &[u8], flags: u8) -> Result<usize, SaveErr
 }
 
 /// Validates the 8-byte gzip trailer (CRC-32 + ISIZE) at `trailer_at`.
-fn validate_trailer(input: &[u8], trailer_at: usize, payload: &[u8]) -> Result<(), SaveError> {
+fn validate_trailer(
+    input: &[u8],
+    trailer_at: usize,
+    payload: &[u8],
+) -> Result<Option<(u32, u32)>, SaveError> {
     let trailer = input
         .get(trailer_at..trailer_at + GZIP_TRAILER_LEN)
         .ok_or(SaveError::DeflateTruncated)?;
     let expected_crc = u32::from_le_bytes(trailer[..4].try_into().expect("slice length checked"));
     let actual_crc = crc32fast::hash(payload);
-    if expected_crc != actual_crc {
-        return Err(SaveError::CrcMismatch {
-            expected: expected_crc,
-            actual: actual_crc,
-        });
-    }
     let expected_size = u32::from_le_bytes(trailer[4..8].try_into().expect("slice length checked"));
     let actual_size = payload.len() as u32;
     if expected_size != actual_size {
@@ -141,7 +162,7 @@ fn validate_trailer(input: &[u8], trailer_at: usize, payload: &[u8]) -> Result<(
             actual: actual_size,
         });
     }
-    Ok(())
+    Ok((expected_crc != actual_crc).then_some((expected_crc, actual_crc)))
 }
 
 /// Inflates a raw DEFLATE stream with a hard output cap, returning the

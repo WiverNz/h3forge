@@ -50,3 +50,11 @@ Follow-up fix (2026-11-10): the five town commands (`list_towns`, `get_town`, `a
 Verification: `towns.rs` unit tests and `tests/towns_synthetic.rs` (false positive, gap, candidate cases); `tests/sample_towns.rs` with `H3FORGE_FIXTURE_ROOT` and `H3FORGE_MAPS_ROOT` (discovery, map cross-check, edit validation, garrison-hero block, garrison round trip); desktop `tests/town_flow.rs` (pending override in list, garrison-hero block, Save As round trip and reopen) and `tests/command_permissions.rs`. Frontend typecheck passes.
 
 Unresolved: the native window flow and loading an edited save in the matching game are not yet confirmed by the maintainer. Only the one 44/11 sample backs the layout; other HotA minors and SoD/RoE town layouts stay read-only or undiscovered (H3F-015).
+
+## Localized discovery follow-up
+
+H3F-030 repairs the inherited no-FF/14-byte town-name restriction using native
+Russian 44/11 fixtures. Six towns and eight player slots now resolve in all
+four supplied saves; malformed/incomplete table gates remain. See
+[H3F-030](030-player-teams-alliances.md#requested-townplayer-discovery-fix-2026-11-14)
+for evidence and verification. No new town edit operation was introduced.

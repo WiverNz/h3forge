@@ -4,13 +4,14 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { App } from '../App';
 import { ArmyEditor } from '../components/ArmyEditor';
 import { PlayersPanel } from '../components/PlayersPanel';
+import { SaveBanner } from '../components/SaveBanner';
 import { TownBuildings } from '../components/TownBuildings';
 import { CoordinatesEditor } from '../components/CoordinatesEditor';
 import { Feedback } from './Feedback';
 import { ReasonText } from './reasons';
 import { i18n, t } from './index';
 import { languages } from './locale';
-import type { ArmySlotDto, PlayerDto } from '../types/api';
+import type { ArmySlotDto, PlayerDto, SaveSummaryDto } from '../types/api';
 
 test('four-language shell, editor and error rendering keeps identities, classes and dirty markers', async () => {
   const stack: ArmySlotDto = { creatureId: 0, count: 1234, name: '<Custom & Иван>', empty: false, editable: true };
@@ -23,6 +24,20 @@ test('four-language shell, editor and error rendering keeps identities, classes 
   for (const language of languages) {
     await i18n.changeLanguage(language);
     const shell = renderToStaticMarkup(<App />);
+    const summary: SaveSummaryDto = {
+      fileName: 'native.GM2', familyTitle: 'HotA', major: 44, minor: 11,
+      containerKind: 'regular', compatibility: 'readable', heroesSupported: true,
+      mapName: null, mapDescription: null, heroCount: 0, confirmedCount: 0,
+      saveDisabledReason: null,
+      diagnostics: [{ code: 'native-gzip-crc-mismatch', message: 'Technical CRC values' }],
+    };
+    const banner = renderToStaticMarkup(<SaveBanner summary={summary} encoding="auto"
+      onEncodingChange={() => {}} onMapLinkChanged={() => {}} />);
+    assert.ok(banner.includes(t('teams.nativeCrc')));
+    assert.ok(banner.includes('role="status"'));
+    const cleanBanner = renderToStaticMarkup(<SaveBanner summary={{ ...summary, diagnostics: [] }}
+      encoding="auto" onEncodingChange={() => {}} onMapLinkChanged={() => {}} />);
+    assert.ok(!cleanBanner.includes(t('teams.nativeCrc')));
     assert.ok(shell.includes(t('common.settings')));
     assert.ok(shell.includes(t('common.theme')));
     assert.ok(shell.includes(t('common.themeLight')));
@@ -37,7 +52,20 @@ test('four-language shell, editor and error rendering keeps identities, classes 
       onTentEdit={() => { throw new Error("render must not edit"); }} onEdit={() => { throw new Error('render must not edit'); }} onRevert={() => {}}
       epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={0} />);
     assert.ok(players.includes(t('tents.title')));
-    assert.equal((players.match(/<select /g) ?? []).length, 9);
+    assert.equal((players.match(/<select /g) ?? []).length, 10);
+    assert.ok(/<select id="current-player-team" disabled="" aria-describedby="team-edit-blocker"><option value="unknown" selected="">/.test(players));
+    assert.ok(players.includes(t('teams.current')));
+    assert.ok(players.includes(t('teams.blocked')));
+    const linkedPlayer = { ...player, details: { ...player.details, mapLinked: true, team: 2, allies: [1], enemies: [4] } };
+    const linked = renderToStaticMarkup(<PlayersPanel players={[linkedPlayer]} selectedId={0}
+      onSelect={() => {}} onTentEdit={() => { throw new Error('must not edit'); }}
+      onEdit={() => { throw new Error('must not edit'); }} onRevert={() => {}}
+      epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={1} />);
+    assert.ok(/<select id="current-player-team" disabled="" aria-describedby="team-edit-blocker"><option value="unknown" selected="">/.test(linked));
+    assert.ok(linked.includes(t('ui.mapTeam')));
+    assert.ok(linked.includes(t('ui.teamValue', { value1: 2 })));
+    assert.ok(linked.includes(t('ui.mapAllies')));
+    assert.ok(linked.includes(t('ui.mapEnemies')));
     assert.ok(players.includes(t('lists.sort')));
     assert.ok(players.includes(t('lists.filter')));
     assert.ok(players.includes(t('tents.notVisited')));

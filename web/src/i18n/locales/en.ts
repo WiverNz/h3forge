@@ -1,4 +1,9 @@
 export const en = {
+  "teams": {
+    "nativeCrc": "Opened with the native HotA checksum exception. The stream is complete, but its checksum cannot confirm data integrity. Saved output will have a valid checksum.",
+    "current": "Team (current save)",
+    "blocked": "Team editing is unavailable: current alliances, shared vision and victory/loss rules are unverified. Relationships below come from the original map."
+  },
   "lists": {
     "sort": "Sort",
     "filter": "Filter",

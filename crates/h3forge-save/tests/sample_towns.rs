@@ -125,7 +125,8 @@ fn sample_towns_cross_check_map() {
         return;
     };
     let body = map.body.expect("sample map body parses");
-    assert_eq!(body.towns.len(), EXPECTED_TOWNS);
+    assert!(!body.towns.is_empty());
+    assert_eq!(document.towns.len(), body.towns.len(), "complete save town table");
 
     // Every save town matches exactly one map town by entrance coordinates
     // (save x/y/z == map anchor x-2 / y / z, verified here), and the names

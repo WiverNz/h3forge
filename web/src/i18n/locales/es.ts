@@ -1,5 +1,10 @@
 import type { Catalog } from '../types';
 export const es = {
+  "teams": {
+    "nativeCrc": "Abierto con la excepción de suma de comprobación de HotA. El flujo está completo, pero su suma no permite confirmar la integridad de los datos. Al guardar se generará una suma válida.",
+    "current": "Equipo (partida actual)",
+    "blocked": "La edición de equipos no está disponible: las alianzas actuales, la visión compartida y las reglas de victoria y derrota no están verificadas. Las relaciones siguientes proceden del mapa original."
+  },
   "lists": {
     "sort": "Ordenar",
     "filter": "Filtrar",
