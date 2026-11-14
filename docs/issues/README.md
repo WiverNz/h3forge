@@ -69,7 +69,7 @@ dependency license inventory remain manual final-release gates; see
 | H3F-027 | [Neutral Creatures and Map Garrisons (verified scope)](027-neutral-creatures.md) | M4 | P1 | 006, 008, 009, 013, 021 |
 | H3F-028 | [Keymaster Tents and Player Visit Status (implemented)](028-keymaster-tents.md) | M4 | P1 | 006, 008, 018, 021 |
 | H3F-029 | [List Sorting & Filtering (implemented; native smoke pending)](029-list-sorting-filtering.md) | M5 | P1 | 003, 013, 018, 023 (delivered details), 024, 027 |
-| H3F-030 | [Player Teams & Alliances (blocked on format evidence; disabled UI delivered)](030-player-teams-alliances.md) | M4 | P1 | 008, 018, 023 |
+| H3F-030 | [Player Teams & Alliances (join existing team implemented; create/remove team unsupported)](030-player-teams-alliances.md) | M4 | P1 | 008, 018, 023 |
 
 H3F-026 dismisses a player-owned hero from a HotA 44/11 save as checked same-length patches, derived from a real before/after pair of a native dismissal: hero record, hero owner table, player roster, map tile and boarded boat. Army, spell points and movement are reset as in the game in the verified cases; the replay log is not extended. A second (land hero) pair is reproduced completely apart from the replay log. Garrisoned or visiting heroes, heroes on map objects and ambiguous structures are refused with an explanation. Copy-based core and desktop regressions pass; loading the result in the game is still a manual gate.
 

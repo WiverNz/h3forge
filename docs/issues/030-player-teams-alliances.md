@@ -1,6 +1,6 @@
 # H3F-030 - Player Teams & Alliances
 
-Status: team writes blocked on runtime consistency evidence; initialization fields identified, disabled UI and native CRC import fix delivered.
+Status: joining an existing team is implemented and verified in HotA (see "Team reassignment delivered" at the end). Creating a team, emptying a team and saves without teams remain unsupported. Earlier sections are kept as history; where they say team writes are blocked, the final section supersedes them.
 Milestone: M4. Priority: P1. Dependencies: H3F-008, H3F-018, H3F-023.
 
 ## Goal and delivered boundary
@@ -148,11 +148,12 @@ follow-up, so no frontend build or unrelated test suite was repeated.
 - [x] Research required references and existing player parsing.
 - [x] Keep unverified operations disabled, without a backend team-write path.
 - [x] Show current-save unknown separately from authored relationships.
-- [ ] Verify complete 44/11 field set and consistency rules.
-- [ ] Implement checked BytePatch planning and pending/Revert/Discard/persistence.
-- [ ] Test merge/split, exact diffs, other-player isolation and save/reopen.
-- [ ] Validate changed relationships, shared vision, victory/loss, status and
-  allied interactions in the matching HotA version, including after ending a turn.
+- [x] Locate the 44/11 team table structurally (join scope only).
+- [x] Implement checked BytePatch planning and pending/Revert/Discard/persistence.
+- [x] Test joins, exact diffs, other-player isolation and save/reopen.
+- [x] User-validated in HotA: alliances after load, after ending a turn, and
+  after a native save and reload (two saves, both directions).
+- [ ] Split into a new team, emptying a team, no-team saves: unverified, refused.
 
 Verification:
 
@@ -270,3 +271,124 @@ Verification:
   Native visual and edited-save HotA load checks remain manual.
 
 Original saves/maps/assets were not modified. No unrelated issue was started.
+
+## Requested temporary experiment (2026-11-14)
+
+Completed the requested temporary solution as a Rust example tool,
+`crates/h3forge-save/examples/experimental_teams.rs`. This explicitly authorized
+experiment supersedes the earlier blanket no-writer statement for the four
+fingerprinted original samples only. The desktop team selector remains disabled.
+This is not a claim of safe general ongoing-game alliance editing.
+
+The tool accepts input, new output, color index (0 Red, 1 Blue, 2 Tan, 4 Orange)
+and one-based existing team (1 or 2). SHA-256 pins the entire original file before
+using sample-specific offsets. It refuses unknown/edited inputs, inactive colors,
+unchanged assignments, new teams and emptying a team. Checked expected-old-byte
+patching changes exactly one assignment byte. Count, caches, exploration, visits,
+victory state and all other payload bytes remain unchanged by design; whether
+HotA recomputes dependent state is the question this experiment tests.
+
+Ready-to-load private outputs:
+
+- `.local/fixtures/teams-030-experimental/Blue_join_Tan_Orange.GM2`, from
+  `same_teams_restart.GM2`: Blue moves from team 1 to team 2.
+- `.local/fixtures/teams-030-experimental/Blue_join_Red.GM2`, from
+  `separate_team_map_2.GM2`: Blue moves from team 2 to team 1.
+
+Reproduction (choose an unused output filename):
+
+```powershell
+cargo run -p h3forge-save --example experimental_teams -- games/same_teams_restart.GM2 .local/fixtures/teams-030-experimental/another_test.GM2 1 2
+```
+
+Output is compressed and strictly reopened before creation, opened exclusively
+with `create_new`, synced, read back and strictly reopened from disk. Existing
+destinations cannot be replaced. Originals are never written, so no overwrite
+or backup workflow is introduced. A failed disk write may leave a partial new
+output and reports an error; it never affects the source.
+
+Verification: two focused tests passed (unknown/invalid input and existing-file
+preservation); both real outputs passed exact one-byte payload checks, correct
+CRC strict reopen and disk readback. Formatting passed. No in-game success is
+claimed. Load each copy in HotA and inspect alliances, friendly/enemy interaction,
+shared vision and turn advancement; save under a new name and reload to check
+persistence. Record any unexpected victory or defeat. The new native save and
+observed behavior will guide further implementation. No other issue was started.
+
+## Team reassignment delivered (2026-11-14)
+
+Supersedes the "blocked" statements above for one operation: moving a
+participating player into another team that already exists.
+
+Game evidence (user-run, HotA, both experimental saves): `Blue_join_Tan_Orange.GM2`
+and `Blue_join_Red.GM2` loaded, showed the changed alliances, a turn was
+ended, and the game was saved natively as `*_after.GM2` and reloaded. The user
+reports that it works. Rechecked here: each edited save differs from its
+original by exactly one assignment byte, and both native `_after` saves still
+carry the edited table (count 2; `0,1,1,0,1` and `0,0,1,0,1`) with unchanged
+participation. The game therefore reads and rewrites this table as the
+alliance source; no second team field had to be changed.
+
+Verified facts:
+
+- The table is `count:u8` + `team[8]` directly after the loss condition in the
+  embedded map header. A structural walk (name, description, eight player
+  specs, victory, loss, teams, custom heroes) ends on three anchors: the
+  `00..07` identity row, eight starting factions and the `.h3m` file name.
+  It resolves all 12 reference saves in `games/`: offsets 475, 477, 431
+  (special victory type 7, 3 custom heroes) and 528 (named starting heroes,
+  5 teams, 214 custom heroes).
+- A join is one same-length byte. Count and every other byte are untouched.
+
+Design choices:
+
+- Core: `h3forge_save::teams` with `SaveDocument::team_table()` and
+  `plan_team_edits(&[TeamEdit])`. Regular HotA 44/11 only. All moves are
+  planned jointly; each produces one checked `BytePatch` with the expected
+  old byte. Refused: unknown victory/loss types or failed anchors, saves with
+  fewer than two teams, colors not in the game (no starting faction, absent
+  player type or not playable), teams that do not exist, duplicate moves, and
+  any plan that leaves a team without a participating player.
+- Desktop: `apply_team_edit(id, team)` (one-based team), pending moves shown
+  in the pending list, cleared by Revert player and Discard, written by Save
+  and Save As through the existing backup and strict reopen path. Revert of
+  one player is refused if it would empty a team given other pending moves.
+- UI: Players -> General has an enabled Team (current save) selector listing
+  existing teams with their members. Targets that would empty a team are
+  disabled. The list row shows the current save team. Map team, allies and
+  enemies remain authored H3M facts. Four languages.
+
+Unresolved, intentionally not done:
+
+- Creating a team (count + 1) or removing one (renumbering) was never loaded
+  in the game. A player who is alone in a team cannot be moved.
+- Saves with team count 0 store no assignment bytes; adding them would change
+  the payload length.
+- Explored map, visited objects, obelisk/puzzle progress and tents are not
+  merged or split. Whether HotA shares vision retroactively after a join was
+  not inspected byte-wise; the UI states that only the assignment changes.
+- "Participating" comes from starting settings. A defeated player still
+  counts as a team member for the empty-team check.
+- Special victory/loss conditions with a changed team were not played.
+
+Verification:
+
+- 1 synthetic unit test (variable header, no-team, unknown victory type,
+  out-of-range team, truncation, other version).
+- `sample_teams` passed without skips on six saves: offsets, counts, tables,
+  every legal single move as an exact one-byte diff with strict reopen,
+  refusal of every team-emptying move, joint swap, and byte-exact
+  reproduction of both game-verified saves plus the `_after` tables.
+- Desktop `team_flow` passed: options, refused requests, pending entry,
+  Revert, Discard, Save As (single differing byte, source untouched), Save.
+  `command_permissions`, `native_player_discovery` and `native_crc_flow` passed.
+- TypeScript check, i18n render suite (2), list tests (31) and one Vite
+  production build passed. fmt check passed; clippy shows no new warnings in
+  non-test code.
+- Not done: native window click-through of the new selector, and loading a
+  save written by the app itself (as opposed to the byte-identical
+  experimental files) in HotA.
+
+`crates/h3forge-save/examples/experimental_teams.rs` is superseded by the
+application feature; it stays SHA-pinned to the four samples and was left in
+place. Originals in `games/` were only read. No other issue was started.

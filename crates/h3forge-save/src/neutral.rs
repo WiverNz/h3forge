@@ -68,7 +68,9 @@ fn render_matches(
     let position = [index % size, index / size % size, index / (size * size)];
     (0..count).all(|i| {
         let entry = at + 22 + i * 4;
-        let Some(id) = word(p, entry) else { return false };
+        let Some(id) = word(p, entry) else {
+            return false;
+        };
         let Some(&(anchor, _, _, _)) = objects.objects.get(id as usize) else {
             return false;
         };

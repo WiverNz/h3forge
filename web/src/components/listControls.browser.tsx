@@ -23,6 +23,7 @@ const players = Array.from({ length: 8 }, (_, id) => ({ id, color: id, name: 'Un
   active: id === 0, statusReason: '', heroCount: id === 0 ? 1 : 0, townCount: 0,
   resources: [10, 2, 3, 4, 5, 6, 7], original: [1, 2, 3, 4, 5, 6, 7], dirtyResources: [0],
   tentVisits: Array(8).fill(false), originalTentVisits: Array(8).fill(false), dirtyTents: [], readOnlyReason: null,
+  team: null, originalTeam: null, teamCount: 0, teamOptions: [], teamState: 'unsupported', teamDirty: false,
   details: { mapLinked: id < 4, team: id < 2 ? 1 : null, startingHero: null, startingTown: null, eligibility: null,
     allies: null, enemies: null, mapSize: null, obelisks: null },
 })) as unknown as PlayerDto[];
@@ -43,7 +44,7 @@ function Fixture({ section }: { section: string }) {
   return <div className="overview-columns" style={{ height: 600, margin: 12 }}>
     {section === 'heroes' ? <HeroList heroes={heroes} selectedId={selected} onSelect={setSelected} encoding="auto" portraits={new Map()} />
       : section === 'towns' ? <TownList towns={towns} selectedId={selected} onSelect={setSelected} encoding="auto" />
-      : section === 'players' ? <PlayersPanel players={players} selectedId={selected ?? 0} onSelect={setSelected} onEdit={() => { writes++; }} onTentEdit={() => { writes++; }} onRevert={() => { writes++; }} epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={0} />
+      : section === 'players' ? <PlayersPanel players={players} selectedId={selected ?? 0} onSelect={setSelected} onEdit={() => { writes++; }} onTentEdit={() => { writes++; }} onTeamEdit={() => { writes++; }} onRevert={() => { writes++; }} epoch={0} artworkVersion="" busy={false} encoding="auto" mapLinkEpoch={0} />
       : <CreaturesPanel epoch="fixture" onChanged={async () => {}} onBusy={() => {}} />}
     {(section === 'heroes' || section === 'towns') && <div data-testid="detail"><span>{selected}</span><input aria-label="Draft" defaultValue="pending draft" /></div>}
   </div>;

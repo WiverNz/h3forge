@@ -180,4 +180,5 @@ export async function discardNeutralEdits(id: number): Promise<import('../types/
   return invoke('discard_neutral_edits', { id });
 }
 
+export async function applyTeamEdit(id: number, team: number): Promise<import("../types/api").PlayerDto[]> { return invoke("apply_team_edit", { id, team }); }
 export async function applyTentEdit(id: number, color: number, visited: boolean): Promise<import("../types/api").PlayerDto[]> { return invoke("apply_tent_edit", { id, color, visited }); }

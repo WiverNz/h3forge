@@ -596,6 +596,16 @@ pub fn apply_tent_edit(
 ) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
     lock(&state)?.apply_tent_edit(id, color, visited)
 }
+
+#[tauri::command]
+pub fn apply_team_edit(
+    state: State<'_, Mutex<AppState>>,
+    id: u8,
+    team: u8,
+) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
+    lock(&state)?.apply_team_edit(id, team)
+}
+
 #[tauri::command]
 pub fn get_keymaster_icon(
     state: State<'_, Mutex<AppState>>,

@@ -1742,6 +1742,16 @@ pub struct TownEditResponseDto {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PlayerDto {
+    /// One-based current-save team with pending moves applied; `None` when
+    /// the team table is unavailable or the color does not take part.
+    pub team: Option<u8>,
+    pub original_team: Option<u8>,
+    pub team_count: u8,
+    /// One-based teams this player may be moved into right now.
+    pub team_options: Vec<u8>,
+    /// "editable", "single" (fewer than two teams), "absent" or "unsupported".
+    pub team_state: &'static str,
+    pub team_dirty: bool,
     pub tent_visits: Option<[bool; 8]>,
     pub original_tent_visits: Option<[bool; 8]>,
     pub dirty_tents: Vec<u8>,

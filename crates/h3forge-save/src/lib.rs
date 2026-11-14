@@ -27,6 +27,7 @@ pub mod neutral;
 mod parse;
 mod patch;
 pub mod players;
+pub mod teams;
 pub mod town_state;
 pub mod towns;
 
@@ -43,6 +44,7 @@ pub use locate::{LocatedHero, RejectReason};
 pub use parse::{MapMetadata, decode_legacy_text};
 pub use patch::{BytePatch, apply_patches, compress_gzip};
 pub use players::{PlayerEdit, PlayerView};
+pub use teams::{TeamEdit, TeamTable};
 pub use town_state::{BuildingGroup, BuildingStatus, TownState};
 pub use towns::{LocatedTown, TownRejectReason};
 

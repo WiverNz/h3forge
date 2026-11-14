@@ -1700,7 +1700,9 @@ These are format facts only; no third-party implementation was copied.
 
 ## H3F-030 - Initialized teams and native CRC evidence (2026-11-14)
 
-Status: verified initialization comparison, not verified ongoing alliance editing.
+Status: team table verified as the alliance source for joining an existing
+team (see "Team table and supported write" below). Earlier paragraphs in this
+section are kept as research history.
 The supplied Crimson and CloverA_blue_in_2_team.h3m puts Blue in zero-based
 team 1; the original Crimson and CloverA.h3m puts Blue in team 0. Both have
 two teams. Rust map parsing confirms the other playable colors retain teams:
@@ -1721,8 +1723,64 @@ in the old sample to 1 at 478 in the new sample. These are sample-specific
 payload offsets, not constants for production parsing. The research walk is
 restricted to this day-1 normal-victory/loss layout. Current alliance authority,
 team-related duplicates/caches and sharing updates remain unverified. No team
-writer or general-purpose header parser was added. No whole-save serialization
+writer or general-purpose header parser was added in that research pass. No whole-save serialization
 or original H3M edits are involved.
+
+Temporary experiment follow-up (2026-11-14): the Rust `experimental_teams`
+example now allows a single initialized assignment-byte change on exactly the
+four SHA-256-pinned originals listed in H3F-030. Old samples use count offset
+474 and assignment offset `475 + color`; the new-map sample uses 476 and
+`477 + color`. Both existing teams must remain populated. Count and all other
+payload bytes are preserved. Two generated Blue reassignment copies pass exact
+one-byte diff and strict gzip reopen checks. This is an explicit manual game
+experiment, not evidence that the header controls ongoing alliances, updates
+dependent state or supports arbitrary layouts. General desktop writes remain
+disabled pending HotA testing.
+
+### Team table and supported write (2026-11-14)
+
+Verified in HotA 44/11 by loading two edited saves, ending a turn, saving
+natively and reloading: the game applies the changed alliance and writes the
+edited assignment back unchanged. The table is therefore authoritative for
+current alliances, not only an initialization record.
+
+Location is structural, never an absolute offset. Starting at payload offset
+95 (map name length; offsets 89..94 hold playable flag, map size u32 and
+two-level flag):
+
+| Field | Size | Notes |
+|---|---|---|
+| name, description | String16 each | u16 length + bytes |
+| difficulty, max hero level | 2 | |
+| player spec x 8 | 9, 12 or more | can_human, can_computer (0/1), behavior, allowed factions u16, random faction, has main town (0/1), [x,y,z if set], 1 byte, starting hero type, [portrait + String16 name if type != FF] |
+| victory | 1 or more | FF, or type + 2 flags + payload: 0/5: 1, 1/2/3: 5, 4/6/7: 3, 8/9/11: 0, 10/12: 4 bytes |
+| loss | 1 or more | FF, or 0: +3, 1/2: +2 bytes |
+| team count | 1 | 0..8 |
+| team per color | 8 | zero-based; present only if count > 0 |
+| custom hero count + records | 1 + n x (type, portrait, String32 name, hire mask) | 214 records in the Mysterious Island samples |
+| identity row | 8 | always 00..07; walk anchor |
+| unknown | 8 | varies between restarts |
+| starting factions | 8 x i32 | -1 for absent colors; walk anchor |
+| player types | 8 | FF for absent colors |
+| chosen difficulty | 1 | |
+| map file name | 251 | NUL-padded, ends in .h3m; walk anchor |
+
+Only the FF (normal) victory/loss forms and victory type 7 occur in the
+samples; the other payload sizes follow the h3svg specification and are
+guarded by the anchors rather than sample-verified.
+
+Observed assignment offsets: 475 (three Crimson and Clover samples), 477
+(blue_in_2_team), 431 (Element Land: victory type 7, three custom heroes),
+528 (Mysterious Island: named starting heroes, five teams). Unknown victory
+or loss types, failed anchors or an out-of-range team for a participating
+color make the table unavailable and read-only.
+
+Supported write: set `team[color]` to another existing team index for a
+participating color, provided every team index below count keeps at least one
+participating color. One byte per moved player; count is never changed.
+Unverified and refused: count changes (new or removed teams), renumbering,
+and count 0 saves (the eight bytes are absent, so a write would change length).
+No fog, visit-mask, obelisk or victory state is modified.
 
 The new save is 79,999 compressed bytes / 580,032 payload bytes, SHA-256
 9594a96725e5f692274aced96efd0e6db42d6e30cf43ee81587d3b40ff3342ad.

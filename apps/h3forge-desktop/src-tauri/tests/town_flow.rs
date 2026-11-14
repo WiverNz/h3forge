@@ -27,7 +27,8 @@ fn sample_copy(tag: &str) -> Option<PathBuf> {
 }
 
 fn temp_dir(tag: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("h3forge-town-flow-{}-{}", std::process::id(), tag));
+    let dir =
+        std::env::temp_dir().join(format!("h3forge-town-flow-{}-{}", std::process::id(), tag));
     std::fs::create_dir_all(&dir).expect("temp dir");
     dir
 }
@@ -82,7 +83,10 @@ fn garrison_edit_save_as_roundtrip() {
     assert_eq!(detail.garrison[0].count, 192);
     assert!(detail.garrisoned_hero.is_none());
     assert!(detail.map.is_some(), "map linked automatically");
-    assert!(detail.map.unwrap().matched, "matched to the map by coordinates");
+    assert!(
+        detail.map.unwrap().matched,
+        "matched to the map by coordinates"
+    );
 
     let response = state
         .apply_town_edit(
@@ -150,9 +154,9 @@ fn garrison_edit_save_as_roundtrip() {
     let word1 = edited.span.start + towns::GARRISON_IDS;
     let word2 = edited.span.start + towns::GARRISON_COUNTS;
     assert!(
-        changed
-            .iter()
-            .all(|offset| (word1..word1 + 4).contains(offset) || (word2..word2 + 4).contains(offset)),
+        changed.iter().all(
+            |offset| (word1..word1 + 4).contains(offset) || (word2..word2 + 4).contains(offset)
+        ),
         "diff confined to the garrison words: {changed:?}"
     );
     assert!(state.pending_edits().unwrap().is_empty());
@@ -181,10 +185,19 @@ fn garrison_hero_ownership_blocks_town_edit() {
         )
         .expect_err("garrison owned by a hero is rejected");
     assert_eq!(error.code, "edit-failed");
-    assert!(error.message.contains("garrisoned hero"), "{}", error.message);
+    assert!(
+        error.message.contains("garrisoned hero"),
+        "{}",
+        error.message
+    );
     // The effective state still names the hero for the redirect button.
     let edit_state = state.get_town_edit_state(id).expect("edit state");
-    assert!(edit_state.garrison_read_only_reason.unwrap().contains("hero"));
+    assert!(
+        edit_state
+            .garrison_read_only_reason
+            .unwrap()
+            .contains("hero")
+    );
     assert_eq!(edit_state.garrisoned_hero.unwrap().id, hero.id);
     assert!(state.pending_edits().unwrap().is_empty());
 

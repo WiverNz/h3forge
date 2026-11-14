@@ -29,6 +29,7 @@ fn main() -> Result<(), tauri::Error> {
             h3forge_desktop::commands::apply_neutral_edit,
             h3forge_desktop::commands::discard_neutral_edits,
             h3forge_desktop::commands::apply_tent_edit,
+            h3forge_desktop::commands::apply_team_edit,
             h3forge_desktop::commands::get_keymaster_icon,
             h3forge_desktop::commands::get_player_flag,
             h3forge_desktop::commands::get_player_starting_portrait,

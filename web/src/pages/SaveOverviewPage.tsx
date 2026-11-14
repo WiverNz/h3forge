@@ -10,6 +10,7 @@ import {
   applyHeroEdit,
   applyPlayerEdit,
   applyTentEdit,
+  applyTeamEdit,
   listPlayers,
   discardPlayerEdits,
   applyTownEdit,
@@ -311,6 +312,19 @@ export function SaveOverviewPage() {
     });
   }, [refreshPending]);
 
+  const handleTeamEdit = useCallback((id: number, team: number) => {
+    setPlayerRequests((n) => n + 1);
+    playerQueue.current = playerQueue.current.then(async () => {
+      try {
+        setPlayers(await applyTeamEdit(id, team));
+        await refreshPending();
+      } catch (error) {
+        setSaveState({ kind: 'error', message: errorMessage(error) });
+        setPlayerEpoch((n) => n + 1);
+      } finally { setPlayerRequests((n) => n - 1); }
+    });
+  }, [refreshPending]);
+
   const handleTentEdit = useCallback((id: number, color: number, visited: boolean) => {
     setPlayerRequests((n) => n + 1);
     playerQueue.current = playerQueue.current.then(async () => {
@@ -571,7 +585,7 @@ export function SaveOverviewPage() {
             </nav>
             <div className="overview-columns" inert={saveState.kind === 'saving'}>
               {section === 'creatures' ? <CreaturesPanel epoch={`${playerEpoch}:${mapLinkEpoch}:${openState.summary.fileName}`} onChanged={refreshPending} onBusy={delta => setPlayerRequests(n => n + delta)} /> : section === 'players' ? <PlayersPanel players={players} selectedId={selectedPlayerId}
-                onSelect={setSelectedPlayerId} onEdit={handlePlayerEdit} onTentEdit={handleTentEdit} onRevert={handleRevertPlayer}
+                onSelect={setSelectedPlayerId} onEdit={handlePlayerEdit} onTentEdit={handleTentEdit} onTeamEdit={handleTeamEdit} onRevert={handleRevertPlayer}
                 epoch={playerEpoch} encoding={encoding} mapLinkEpoch={mapLinkEpoch} artworkVersion={installation?.archiveRoot ?? ''} busy={playerRequests > 0} /> : section === 'heroes' ? (
                 <>
                   <HeroList

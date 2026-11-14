@@ -23,6 +23,7 @@ fn main() {
             "apply_neutral_edit",
             "discard_neutral_edits",
             "apply_tent_edit",
+            "apply_team_edit",
             "get_keymaster_icon",
             "get_player_flag",
             "get_player_starting_portrait",

@@ -106,6 +106,8 @@ pub struct SaveSession {
     /// Pending town garrison edits, keyed like `pending` (H3F-013).
     pending_towns: BTreeMap<usize, BTreeMap<TownFieldKey, TownEdit>>,
     pending_tents: BTreeMap<(u8, u8), bool>,
+    /// Pending team moves: player color to zero-based existing team (H3F-030).
+    pending_teams: BTreeMap<u8, u8>,
     pending_players: BTreeMap<usize, BTreeMap<u8, i64>>,
     pending_neutral: BTreeMap<usize, BTreeMap<u8, h3forge_save::neutral::NeutralEdit>>,
     /// Heroes marked for dismissal (H3F-026); planned jointly at save time
@@ -318,6 +320,7 @@ impl AppState {
             pending: BTreeMap::new(),
             pending_towns: BTreeMap::new(),
             pending_tents: BTreeMap::new(),
+            pending_teams: BTreeMap::new(),
             pending_players: BTreeMap::new(),
             pending_neutral: BTreeMap::new(),
             pending_dismissals: BTreeSet::new(),
@@ -802,6 +805,19 @@ impl AppState {
                 });
             }
         }
+        if let Some(table) = session.document.team_table() {
+            for (&color, &team) in &session.pending_teams {
+                let name = names::PLAYER_COLORS[color as usize];
+                out.push(PendingEditDto {
+                    record_kind: "player",
+                    record_id: color as usize,
+                    record_name: crate::dto::TextDto::new(name.as_bytes(), name),
+                    field: "Team".into(),
+                    before: (table.teams[color as usize] + 1).to_string(),
+                    after: (team + 1).to_string(),
+                });
+            }
+        }
         let neutral_base =
             (!session.pending_neutral.is_empty()).then(|| session.document.neutral_armies());
         for (&id, edits) in &session.pending_neutral {
@@ -876,6 +892,7 @@ impl AppState {
         session.pending_towns.clear();
         session.pending_players.clear();
         session.pending_tents.clear();
+        session.pending_teams.clear();
         session.pending_neutral.clear();
         session.pending_dismissals.clear();
         self.pending_edits()
@@ -884,11 +901,20 @@ impl AppState {
     pub fn list_players(&self) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
         let session = self.session()?;
         let masks = session.document.keymaster_masks();
+        let teams = session.document.team_table();
         Ok(session
             .document
             .players
             .iter()
             .map(|p| {
+                let team = teams.filter(|t| t.count > 0 && t.participating[p.color as usize]);
+                let current = |t: &h3forge_save::TeamTable| {
+                    session
+                        .pending_teams
+                        .get(&p.color)
+                        .copied()
+                        .unwrap_or(t.teams[p.color as usize])
+                };
                 let mut resources = p.resources;
                 let pending = session.pending_players.get(&p.id);
                 if let Some(edits) = pending {
@@ -897,6 +923,35 @@ impl AppState {
                     }
                 }
                 crate::dto::PlayerDto {
+                    team: team.as_ref().map(|t| current(t) + 1),
+                    original_team: team.map(|t| t.teams[p.color as usize] + 1),
+                    team_count: teams.map_or(0, |t| t.count),
+                    // Targets that keep every team populated given the other
+                    // pending moves; the current team is always listed.
+                    team_options: team
+                        .filter(|t| t.editable())
+                        .map(|t| {
+                            (0..t.count)
+                                .filter(|&target| {
+                                    let mut moves = session.pending_teams.clone();
+                                    moves.insert(p.color, target);
+                                    target == current(&t)
+                                        || session
+                                            .document
+                                            .plan_team_edits(&team_edits(&moves))
+                                            .is_ok()
+                                })
+                                .map(|target| target + 1)
+                                .collect()
+                        })
+                        .unwrap_or_default(),
+                    team_state: match (teams, team) {
+                        (None, _) => "unsupported",
+                        (Some(t), _) if !t.editable() => "single",
+                        (Some(_), None) => "absent",
+                        _ => "editable",
+                    },
+                    team_dirty: session.pending_teams.contains_key(&p.color),
                     tent_visits: masks.map(|m| {
                         std::array::from_fn(|c| {
                             session
@@ -1099,6 +1154,46 @@ impl AppState {
         self.list_players()
     }
 
+    /// Moves a player into an existing one-based team as a pending edit.
+    /// The whole pending set is replanned so no team can end up empty.
+    pub fn apply_team_edit(
+        &mut self,
+        id: u8,
+        team: u8,
+    ) -> Result<Vec<crate::dto::PlayerDto>, AppErrorDto> {
+        let session = self
+            .session
+            .as_mut()
+            .ok_or_else(AppErrorDto::no_open_save)?;
+        let invalid = |reason: &str| {
+            AppErrorDto::edit_failed(h3forge_save::EditError::InvalidValue {
+                field: "player team",
+                reason: reason.into(),
+            })
+        };
+        let table = session
+            .document
+            .team_table()
+            .ok_or_else(|| invalid("Team layout is unverified for this save."))?;
+        let target = team
+            .checked_sub(1)
+            .filter(|_| id < 8)
+            .ok_or_else(|| invalid("Player must be 0-7 and team numbers start at 1."))?;
+        let mut moves = session.pending_teams.clone();
+        moves.insert(id, target);
+        // Planned with the other pending moves, so absent players, unknown
+        // teams and emptied teams are refused before anything is recorded.
+        session
+            .document
+            .plan_team_edits(&team_edits(&moves))
+            .map_err(AppErrorDto::edit_failed)?;
+        if table.teams[id as usize] == target {
+            moves.remove(&id);
+        }
+        session.pending_teams = moves;
+        self.list_players()
+    }
+
     pub fn apply_player_edit(
         &mut self,
         id: usize,
@@ -1138,6 +1233,15 @@ impl AppState {
         session
             .pending_tents
             .retain(|&(p, _), _| usize::from(p) != id);
+        // Reverting one player's team must not leave another team empty.
+        let mut moves = session.pending_teams.clone();
+        if u8::try_from(id).is_ok_and(|color| moves.remove(&color).is_some()) {
+            session
+                .document
+                .plan_team_edits(&team_edits(&moves))
+                .map_err(AppErrorDto::edit_failed)?;
+            session.pending_teams = moves;
+        }
         self.list_players()
     }
 
@@ -1353,6 +1457,7 @@ impl AppState {
             || !session.pending_towns.is_empty()
             || !session.pending_players.is_empty()
             || !session.pending_tents.is_empty()
+            || !session.pending_teams.is_empty()
             || !session.pending_neutral.is_empty()
             || !session.pending_dismissals.is_empty()
     }
@@ -1433,6 +1538,14 @@ impl AppState {
                 session
                     .document
                     .plan_tent_edits(&edits)
+                    .map_err(AppErrorDto::edit_failed)?,
+            );
+        }
+        if !session.pending_teams.is_empty() {
+            patches.extend(
+                session
+                    .document
+                    .plan_team_edits(&team_edits(&session.pending_teams))
                     .map_err(AppErrorDto::edit_failed)?,
             );
         }
@@ -1542,6 +1655,7 @@ impl AppState {
         session.pending_towns.clear();
         session.pending_players.clear();
         session.pending_tents.clear();
+        session.pending_teams.clear();
         session.pending_neutral.clear();
         session.pending_dismissals.clear();
         drop(_source_guard);
@@ -3313,4 +3427,11 @@ fn read_bounded(path: &Path, max_bytes: usize) -> Result<Vec<u8>, AppErrorDto> {
         return Err(AppErrorDto::file_too_large(max_bytes));
     }
     std::fs::read(path).map_err(|error| AppErrorDto::file_read(error.to_string()))
+}
+
+fn team_edits(moves: &BTreeMap<u8, u8>) -> Vec<h3forge_save::TeamEdit> {
+    moves
+        .iter()
+        .map(|(&color, &team)| h3forge_save::TeamEdit { color, team })
+        .collect()
 }

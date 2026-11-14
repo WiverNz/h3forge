@@ -3,7 +3,10 @@ export const de = {
   "teams": {
     "nativeCrc": "Mit der Prüfsummen-Ausnahme für native HotA-Spielstände geöffnet. Der Datenstrom ist vollständig, aber seine Prüfsumme bestätigt die Datenintegrität nicht. Beim Speichern wird eine gültige Prüfsumme erzeugt.",
     "current": "Team (aktueller Spielstand)",
-    "blocked": "Teamwechsel sind nicht verfügbar: Aktuelle Allianzen, gemeinsame Sicht und Sieg-/Niederlagenregeln sind nicht verifiziert. Die Beziehungen unten stammen aus der ursprünglichen Karte."
+    "editable": "Verschiebt diesen Spieler in ein anderes bestehendes Team. Nur die Teamzuordnung ändert sich: Erkundete Karte, besuchte Objekte und sonstiger Fortschritt werden weder zusammengeführt noch getrennt. Ein Team darf nicht ohne Spieler bleiben, und neue Teams können nicht erstellt werden. In HotA für den Beitritt zu einem bestehenden Team geprüft.",
+    "single": "Dieser Spielstand hat weniger als zwei Teams, daher gibt es kein anderes Team. Das Erstellen von Teams wird nicht unterstützt.",
+    "absent": "Diese Farbe nimmt am aktuellen Spiel nicht teil.",
+    "unsupported": "Teamdaten sind nicht verfügbar: Dieser Spielstand hat nicht das verifizierte HotA-44/11-Kopfdatenlayout."
   },
   "lists": {
     "sort": "Sortieren",
@@ -553,8 +556,8 @@ export const de = {
   "messages": {
     "library": " · Bibliothek ergänzt einen Zauber je Stufe",
     "controller": "Aktuelle Steuerungsfelder sind unbestätigt. Kartenteilnahme bestimmt nicht die aktuelle Steuerung.",
-    "teamLinked": "Teams stammen aus der Ursprungskarte. Aktuelle Bündnisse sind unbestätigt.",
-    "teamMissing": "Ursprungskarte zuordnen, um Teams anzuzeigen. Aktuelle Bündnisse sind unbestätigt.",
+    "teamLinked": "Kartenteam, Verbündete und Gegner stammen aus der Ursprungskarte und können vom aktuellen Spielstand abweichen.",
+    "teamMissing": "Ursprungskarte zuordnen, um deren Teams, Verbündete und Gegner zu vergleichen.",
     "revealMap": "Deaktiviert: Sichtbarkeitsgrenzen, Feldreihenfolge und gemeinsame Sicht sind unbestätigt. Sichtbarkeitsbytes bleiben unverändert.",
     "revealPuzzle": "Deaktiviert: Obeliskenzuordnung, Puzzle-Aktualisierung und Gralverfügbarkeit sind unbestätigt. Puzzlebytes bleiben unverändert.",
     "human": "Mensch",

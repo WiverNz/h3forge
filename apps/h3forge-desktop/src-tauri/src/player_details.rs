@@ -68,7 +68,7 @@ pub fn describe(document: &SaveDocument, link: Option<&MapLink>, color: u8) -> P
         map_linked: linked.is_some(), eligibility: None, controller: None,
         controller_reason: "Current GM2 controller fields are not verified. Map eligibility does not identify the current controller.",
         team: None, allies: None, enemies: None,
-        team_source: "No linked H3M. Current GM2 alliances are unverified.",
+        team_source: "No linked H3M. The current save team is reported separately.",
         starting_town: None, starting_hero: None,
         starting_hero_reason: "No linked H3M starting-hero information.".into(),
         map_size: document.map.size,
@@ -89,7 +89,7 @@ pub fn describe(document: &SaveDocument, link: Option<&MapLink>, color: u8) -> P
         (false, false) => "Not playable",
     });
     out.team = player.team.map(|t| t + 1);
-    out.team_source = "Authored H3M teams; current GM2 alliances are not structurally verified.";
+    out.team_source = "Authored H3M teams; the current save team is reported separately.";
     if player.is_playable() {
         let mut allies = Vec::new();
         let mut enemies = Vec::new();

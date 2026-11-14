@@ -472,6 +472,14 @@ export interface MapLinkDto {
 }
 
 export interface PlayerDto {
+  /** One-based current-save team including pending moves; null when unavailable. */
+  team: number | null;
+  originalTeam: number | null;
+  teamCount: number;
+  /** One-based teams this player may be moved into right now. */
+  teamOptions: number[];
+  teamState: 'editable' | 'single' | 'absent' | 'unsupported';
+  teamDirty: boolean;
   tentVisits: boolean[] | null;
   originalTentVisits: boolean[] | null;
   dirtyTents: number[];

@@ -2,7 +2,10 @@ export const en = {
   "teams": {
     "nativeCrc": "Opened with the native HotA checksum exception. The stream is complete, but its checksum cannot confirm data integrity. Saved output will have a valid checksum.",
     "current": "Team (current save)",
-    "blocked": "Team editing is unavailable: current alliances, shared vision and victory/loss rules are unverified. Relationships below come from the original map."
+    "editable": "Moves this player into another existing team. Only the team assignment changes: explored map, visited objects and other progress are not merged or split. A team cannot be left without players, and new teams cannot be created. Verified in HotA for joining an existing team.",
+    "single": "This save has fewer than two teams, so there is no other team to join. Creating teams is not supported.",
+    "absent": "This color does not take part in the current game.",
+    "unsupported": "Team data is unavailable: this save does not have the verified HotA 44/11 header layout."
   },
   "lists": {
     "sort": "Sort",
@@ -552,8 +555,8 @@ export const en = {
   "messages": {
     "library": " · Library adds one spell per level",
     "controller": "Current save controller fields are unverified. Map eligibility does not identify the current controller.",
-    "teamLinked": "Teams come from the original map. Current save alliances are unverified.",
-    "teamMissing": "Link the original map to inspect authored teams. Current alliances are unverified.",
+    "teamLinked": "Map team, allies and enemies come from the original map and can differ from the current save.",
+    "teamMissing": "Link the original map to compare its authored teams, allies and enemies.",
     "revealMap": "Disabled: visibility boundaries, tile order and team sharing are unverified. Visibility bytes remain unchanged.",
     "revealPuzzle": "Disabled: obelisk/object mapping, puzzle updates and current Grail availability are unverified. Puzzle bytes remain unchanged.",
     "human": "Human",

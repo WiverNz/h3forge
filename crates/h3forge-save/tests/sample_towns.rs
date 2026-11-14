@@ -126,7 +126,11 @@ fn sample_towns_cross_check_map() {
     };
     let body = map.body.expect("sample map body parses");
     assert!(!body.towns.is_empty());
-    assert_eq!(document.towns.len(), body.towns.len(), "complete save town table");
+    assert_eq!(
+        document.towns.len(),
+        body.towns.len(),
+        "complete save town table"
+    );
 
     // Every save town matches exactly one map town by entrance coordinates
     // (save x/y/z == map anchor x-2 / y / z, verified here), and the names
@@ -211,7 +215,12 @@ fn sample_garrison_edit_roundtrip() {
     assert_eq!(edited.garrison[0].count, 250);
     // Everything outside the patched garrison words is identical.
     let mut changed = Vec::new();
-    for (index, (before, after)) in document.payload().iter().zip(reopened.payload()).enumerate() {
+    for (index, (before, after)) in document
+        .payload()
+        .iter()
+        .zip(reopened.payload())
+        .enumerate()
+    {
         if before != after {
             changed.push(index);
         }

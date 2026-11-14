@@ -26,6 +26,7 @@
     "allow-apply-neutral-edit",
     "allow-discard-neutral-edits",
     "allow-apply-tent-edit",
+    "allow-apply-team-edit",
     "allow-get-keymaster-icon",
     "allow-get-player-flag",
     "allow-get-player-starting-portrait",

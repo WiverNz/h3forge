@@ -679,17 +679,18 @@ pub fn annotate_town_heroes(towns: &mut [TownView], heroes: &[HeroView], payload
                     } else {
                         town.visiting_hero = Some(*hero_id);
                     }
-                    if let Some((x, y, z, _)) = hero_map_location(payload, heroes[*hero_id].span.start)
+                    if let Some((x, y, z, _)) =
+                        hero_map_location(payload, heroes[*hero_id].span.start)
                         && (x as u8, y as u8, z) != (town.x, town.y, town.z)
                     {
-                        town.notes.push(TownNote::GarrisonHeroLocationMismatch {
-                            hero_id: *hero_id,
-                        });
+                        town.notes
+                            .push(TownNote::GarrisonHeroLocationMismatch { hero_id: *hero_id });
                     }
                 }
                 _ => {
                     if is_garrison {
-                        town.notes.push(TownNote::GarrisonHeroAmbiguous { hero_type });
+                        town.notes
+                            .push(TownNote::GarrisonHeroAmbiguous { hero_type });
                     }
                 }
             }
@@ -702,8 +703,7 @@ pub fn annotate_town_heroes(towns: &mut [TownView], heroes: &[HeroView], payload
 pub fn annotate_town_duplicates(towns: &mut [TownView]) {
     for index in 0..towns.len() {
         for other in index + 1..towns.len() {
-            if !towns[index].name_raw.is_empty() && towns[index].name_raw == towns[other].name_raw
-            {
+            if !towns[index].name_raw.is_empty() && towns[index].name_raw == towns[other].name_raw {
                 let index_id = towns[index].id;
                 let other_id = towns[other].id;
                 towns[index]

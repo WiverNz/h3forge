@@ -47,10 +47,11 @@ function ResourceInput({ value, original, name, disabled, dirty, onChange }: {
   </div>;
 }
 
-export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit, onRevert, epoch, artworkVersion, busy, encoding, mapLinkEpoch }: {
+export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit, onTeamEdit, onRevert, epoch, artworkVersion, busy, encoding, mapLinkEpoch }: {
   encoding: LegacyEncoding; mapLinkEpoch: number;
   players: PlayerDto[]; selectedId: number; onSelect: (id: number) => void;
   onTentEdit: (id: number, color: number, visited: boolean) => void;
+  onTeamEdit: (id: number, team: number) => void;
   onEdit: (id: number, resource: number, value: number) => void;
   onRevert: (id: number) => void; epoch: number; artworkVersion: string; busy: boolean;
 }) {
@@ -90,6 +91,10 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
     }
     return () => { active = false; };
   }, [selectedId, startingPortraitId, artworkVersion, mapLinkEpoch]);
+  const teamLabel = (team: number) => {
+    const members = players.filter((p) => p.team === team).map((p) => colorName(p.color));
+    return members.length ? `${t('ui.teamValue', { value1: team })} (${members.join(', ')})` : t('ui.teamValue', { value1: team });
+  };
   const colorNames = (colors: number[] | null) => colors === null ? t('ui.unknown') : colors.length === 0 ? t('ui.none2') : colors.map((color) => colorName(color)).join(', ');
   const flag = (color: number, large = false) => flags[color]?.pngBase64
     ? <img className={large ? 'player-banner' : 'player-list-flag'} src={`data:image/png;base64,${flags[color]?.pngBase64}`} alt={t('ui.valueBanner', { value1: colorName(color) })} width={large ? 58 : 24} height={large ? 64 : 27} />
@@ -114,8 +119,8 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
           className={`hero-row ${p.id === selectedId ? 'selected' : ''} ${p.status === 'unknown' ? 'uncertain' : ''}`}
           onClick={() => { setTab('Resources'); onSelect(p.id); }}>
           {flag(p.color)}
-          <span className="hero-row-text"><span className="hero-row-name">{colorName(p.color)}{(p.dirtyResources.length > 0 || p.dirtyTents.length > 0) ? ' *' : ''}<span className={`player-status status-${p.status}`} title={t(p.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[p.status])}</span></span>
-            <span className="hero-row-meta">{eligibility(p.details.eligibility)} · {p.details.team === null ? t('ui.noVerifiedTeam') : t('ui.teamValue', { value1: p.details.team })} {t('ui.map2')}</span>
+          <span className="hero-row-text"><span className="hero-row-name">{colorName(p.color)}{(p.dirtyResources.length > 0 || p.dirtyTents.length > 0 || p.teamDirty) ? ' *' : ''}<span className={`player-status status-${p.status}`} title={t(p.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[p.status])}</span></span>
+            <span className="hero-row-meta">{eligibility(p.details.eligibility)} · {p.team !== null ? t('ui.teamValue', { value1: p.team }) : p.details.team === null ? t('ui.noVerifiedTeam') : `${t('ui.teamValue', { value1: p.details.team })} ${t('ui.map2')}`}</span>
             <span className="hero-row-meta">{t('ui.valueHeroesValueTowns', { value1: p.heroCount, value2: p.townCount })}</span>
           </span>
         </button></li>)}
@@ -126,7 +131,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
       {player && <section className="player-detail" data-player-color={playerColor({ kind: 'player', player: player.color })}>
         <header className="player-heading">{flag(player.color, true)}<div><h2>{colorName(player.color)}</h2>
           <p className="scope-note"><span className={`player-status status-${player.status}`} title={t(player.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}>{t(STATUS[player.status])}</span> · {t('ui.valueHeroesValueTowns', { value1: player.heroCount, value2: player.townCount })}</p></div>
-          <button type="button" disabled={(!player.dirtyResources.length && !player.dirtyTents.length) || busy} onClick={() => onRevert(player.id)}>{t('ui.revertPlayer')}</button>
+          <button type="button" disabled={(!player.dirtyResources.length && !player.dirtyTents.length && !player.teamDirty) || busy} onClick={() => onRevert(player.id)}>{t('ui.revertPlayer')}</button>
         </header>
         {player.readOnlyReason && <p className="scope-note">{<ReasonText reason={player.readOnlyReason} />}</p>}
         <div className="detail-tabs player-tabs" role="tablist" aria-label={t('ui.playerDetails')}>
@@ -156,9 +161,14 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
         <section className="player-general" role="tabpanel" id="player-General" aria-labelledby="tab-General" hidden={tab !== 'General'}>
           <p className="scope-note">{t(player.status === 'active' ? 'messages.activeEvidence' : 'messages.unknownEvidence')}</p>
           <dl className="player-facts">
-            <dt><label htmlFor="current-player-team">{t('teams.current')}</label></dt><dd>
-              <select id="current-player-team" disabled value="unknown" aria-describedby="team-edit-blocker">
-                <option value="unknown">{t('ui.unknown')}</option>
+            <dt><label htmlFor="current-player-team">{t('teams.current')}{player.teamDirty ? ' *' : ''}</label></dt><dd>
+              <select id="current-player-team" disabled={busy || player.team === null || player.teamOptions.length < 2} aria-describedby="team-edit-note"
+                className={player.teamDirty ? 'field-dirty' : undefined} value={player.team ?? 'unknown'}
+                title={player.originalTeam !== null ? t('ui.originalValue', { value1: t('ui.teamValue', { value1: player.originalTeam }) }) : undefined}
+                onChange={(event) => onTeamEdit(player.id, Number(event.target.value))}>
+                {player.team === null ? <option value="unknown">{t('ui.unknown')}</option>
+                  : Array.from({ length: player.teamCount }, (_, index) => index + 1).map((team) => <option key={team} value={team}
+                    disabled={team !== player.team && !player.teamOptions.includes(team)}>{teamLabel(team)}</option>)}
               </select>
             </dd>
             <dt>{t('ui.currentController')}</dt><dd title={t('messages.controller')}>{player.details.controller ?? t('ui.unknownSaveFieldsUnverified')}</dd>
@@ -167,7 +177,7 @@ export function PlayersPanel({ players, selectedId, onSelect, onEdit, onTentEdit
             <dt>{t('ui.mapAllies')}</dt><dd>{colorNames(player.details.allies)}</dd>
             <dt>{t('ui.mapEnemies')}</dt><dd>{colorNames(player.details.enemies)}</dd>
           </dl>
-          <p id="team-edit-blocker" className="scope-note">{t('teams.blocked')}</p>
+          <p id="team-edit-note" className="scope-note">{t(`teams.${player.teamState}`)}</p>
           <p className="scope-note">{t(player.details.mapLinked ? 'messages.teamLinked' : 'messages.teamMissing')}</p>
           <div className="player-starting">
             <div className="player-start-card">

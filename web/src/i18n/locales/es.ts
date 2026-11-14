@@ -3,7 +3,10 @@ export const es = {
   "teams": {
     "nativeCrc": "Abierto con la excepción de suma de comprobación de HotA. El flujo está completo, pero su suma no permite confirmar la integridad de los datos. Al guardar se generará una suma válida.",
     "current": "Equipo (partida actual)",
-    "blocked": "La edición de equipos no está disponible: las alianzas actuales, la visión compartida y las reglas de victoria y derrota no están verificadas. Las relaciones siguientes proceden del mapa original."
+    "editable": "Mueve a este jugador a otro equipo existente. Solo cambia la asignación de equipo: el mapa explorado, los objetos visitados y el resto del progreso no se combinan ni se separan. Un equipo no puede quedarse sin jugadores y no se pueden crear equipos nuevos. Verificado en HotA para unirse a un equipo existente.",
+    "single": "Esta partida tiene menos de dos equipos, así que no hay otro equipo al que unirse. No se admite crear equipos.",
+    "absent": "Este color no participa en la partida actual.",
+    "unsupported": "Los datos de equipos no están disponibles: esta partida no tiene la estructura de cabecera verificada de HotA 44/11."
   },
   "lists": {
     "sort": "Ordenar",
@@ -553,8 +556,8 @@ export const es = {
   "messages": {
     "library": " · La biblioteca añade un hechizo por nivel",
     "controller": "Los campos de control actuales no están verificados. La elegibilidad del mapa no identifica al controlador actual.",
-    "teamLinked": "Los equipos proceden del mapa original. Las alianzas actuales no están verificadas.",
-    "teamMissing": "Vincula el mapa original para ver equipos. Las alianzas actuales no están verificadas.",
+    "teamLinked": "El equipo, los aliados y los enemigos del mapa proceden del mapa original y pueden diferir de la partida actual.",
+    "teamMissing": "Vincula el mapa original para comparar sus equipos, aliados y enemigos.",
     "revealMap": "Desactivado: límites de visibilidad, orden de casillas y visión compartida sin verificar. Los bytes de visibilidad no cambian.",
     "revealPuzzle": "Desactivado: relación de obeliscos, actualización del puzle y disponibilidad del Grial sin verificar. Los bytes del puzle no cambian.",
     "human": "Humano",

@@ -334,9 +334,9 @@ impl LinkedMap {
                         .map(|raw| TextDto::new(raw, &decode_legacy_text(raw))),
                     name_matches,
                     map_owner: map_town.owner,
-                    owner_matches: map_town.owner.map(|owner| {
-                        owner == town.owner.byte() || map_town.owner.is_none()
-                    }),
+                    owner_matches: map_town
+                        .owner
+                        .map(|owner| owner == town.owner.byte() || map_town.owner.is_none()),
                     map_faction: map_town.faction.map(|faction| faction as u8),
                     faction_matches: map_town
                         .faction

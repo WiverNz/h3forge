@@ -7,7 +7,7 @@
 mod common;
 
 use common::{craft_record, gzip_stored, save_payload};
-use h3forge_save::definitions::towns::{self, GARRISON_IDS, GARRISON_COUNTS};
+use h3forge_save::definitions::towns::{self, GARRISON_COUNTS, GARRISON_IDS};
 use h3forge_save::{
     EditError, HeroOwner, SaveDocument, TownConfidence, TownEdit, TownRejectReason,
 };
@@ -33,11 +33,7 @@ fn craft_town(name: &[u8], owner: u8, type_: u8, x: u8, y: u8, z: u8) -> Vec<u8>
     record
 }
 
-fn open(
-    major: u32,
-    minor: u32,
-    records: &[(usize, Vec<u8>)],
-) -> SaveDocument {
+fn open(major: u32, minor: u32, records: &[(usize, Vec<u8>)]) -> SaveDocument {
     let payload = save_payload(major, minor, b"Test Map", b"A test map.", records);
     SaveDocument::open(gzip_stored(&payload)).expect("synthetic save opens")
 }
@@ -96,13 +92,18 @@ fn garrison_edit_roundtrip_exact_diff() {
     assert_eq!(town.garrison[6].count, 12_345);
     assert!(town.garrison[1].is_empty());
     // Everything outside the four patched words is byte-identical.
-    for (index, (before, after)) in document.payload().iter().zip(reopened.payload()).enumerate() {
+    for (index, (before, after)) in document
+        .payload()
+        .iter()
+        .zip(reopened.payload())
+        .enumerate()
+    {
         if before != after {
             let in_word = [0usize, 6].iter().any(|&slot| {
                 (TOWN_AT + GARRISON_IDS + slot * 4..TOWN_AT + GARRISON_IDS + slot * 4 + 4)
                     .contains(&index)
-                    || (TOWN_AT + GARRISON_COUNTS + slot * 4..TOWN_AT + GARRISON_COUNTS + slot * 4
-                        + 4)
+                    || (TOWN_AT + GARRISON_COUNTS + slot * 4
+                        ..TOWN_AT + GARRISON_COUNTS + slot * 4 + 4)
                         .contains(&index)
             });
             assert!(in_word, "unexpected diff at {index}");
@@ -146,7 +147,13 @@ fn garrison_hero_linkage_and_block() {
     let mut town = craft_town(b"Testburg", 4, 2, 10, 20, 0);
     town[towns::GARRISONED_HERO] = 8;
     let hero = craft_record(4, b"Aiden___", 2, 1064, 73);
-    let payload = save_payload(44, 11, b"Test Map", b"A test map.", &[(TOWN_AT, town), (HERO_AT, hero)]);
+    let payload = save_payload(
+        44,
+        11,
+        b"Test Map",
+        b"A test map.",
+        &[(TOWN_AT, town), (HERO_AT, hero)],
+    );
     // Hero front matter: x u16 @ -26, y @ -24, z @ -22, visible @ -20.
     let mut payload = payload;
     payload[HERO_AT - 26..HERO_AT - 24].copy_from_slice(&10u16.to_le_bytes());
@@ -159,10 +166,10 @@ fn garrison_hero_linkage_and_block() {
     let town = &document.towns[0];
     assert_eq!(town.garrison_hero, Some(0));
     assert!(
-        !town
-            .notes
-            .iter()
-            .any(|note| matches!(note, h3forge_save::TownNote::GarrisonHeroLocationMismatch { .. })),
+        !town.notes.iter().any(|note| matches!(
+            note,
+            h3forge_save::TownNote::GarrisonHeroLocationMismatch { .. }
+        )),
         "matching coordinates raise no mismatch note"
     );
     // The garrison belongs to the hero: town edits are rejected, hero edits stand.
@@ -216,12 +223,10 @@ fn unsupported_format_and_low_confidence_stay_read_only() {
     let document = open(44, 11, &[(TOWN_AT, bad), (HERO_AT, hero)]);
     assert_eq!(document.towns.len(), 1);
     assert_eq!(document.towns[0].confidence, TownConfidence::Low);
-    assert!(
-        document.towns[0]
-            .notes
-            .iter()
-            .any(|note| matches!(note, h3forge_save::TownNote::Rejected(TownRejectReason::GarrisonInconsistent)))
-    );
+    assert!(document.towns[0].notes.iter().any(|note| matches!(
+        note,
+        h3forge_save::TownNote::Rejected(TownRejectReason::GarrisonInconsistent)
+    )));
     assert!(matches!(
         document.plan_town_edits(
             0,
@@ -247,15 +252,10 @@ fn unknown_garrison_creature_makes_town_read_only_but_listed() {
     // The record stays listed for inspection but fails verification: every
     // garrison write is blocked, not just the unknown stack.
     assert_eq!(town_view.confidence, TownConfidence::Low);
-    assert!(
-        town_view
-            .notes
-            .iter()
-            .any(|note| matches!(
-                note,
-                h3forge_save::TownNote::Rejected(TownRejectReason::UnknownCreature)
-            ))
-    );
+    assert!(town_view.notes.iter().any(|note| matches!(
+        note,
+        h3forge_save::TownNote::Rejected(TownRejectReason::UnknownCreature)
+    )));
     assert!(!town_view.garrison[1].is_supported());
     for slot in [0u8, 1, 2] {
         assert!(
