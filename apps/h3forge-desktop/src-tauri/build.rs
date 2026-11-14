@@ -1,4 +1,7 @@
 fn main() {
+    // The Windows resource compiler reads this outside Cargo's source graph.
+    println!("cargo:rerun-if-changed=icons/icon.ico");
+    println!("cargo:rerun-if-changed=icons/icon.png");
     let attributes =
         tauri_build::Attributes::new().app_manifest(tauri_build::AppManifest::new().commands(&[
             "get_app_info",

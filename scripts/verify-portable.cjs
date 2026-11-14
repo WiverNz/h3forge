@@ -75,8 +75,9 @@ for (let i = 0; i < ico.readUInt16LE(4); i++) {
   const entry = 6 + i * 16;
   const start = ico.readUInt32LE(entry + 12);
   const bytes = ico.subarray(start, start + ico.readUInt32LE(entry + 8));
-  // Only the 256 px frame may be PNG. Browser download lists and other shell
-  // consumers fall back to the generic EXE icon when small frames are PNG.
+  // Keep small frames as BMP for legacy shell compatibility. This encoding
+  // policy alone does not prove browser extraction; verify-windows-icon.ps1
+  // exercises the Windows API path used by Chromium.
   const isPng = bytes.readUInt32BE(0) === 0x89504e47;
   assert.equal(isPng, ico[entry] === 0, `Icon frame ${i} must be ${ico[entry] === 0 ? 'PNG' : 'BMP'}`);
   assert.ok(resources.some(resource => resource.ids[0] === 3 && resource.bytes.equals(bytes)), `Missing icon frame ${i}`);

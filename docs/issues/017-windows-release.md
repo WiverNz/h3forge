@@ -99,6 +99,38 @@ Tauri build, producing `target/debug/H3Forge.exe`. The first sandboxed attempt
 blocked esbuild process creation (`EPERM`); the approved retry passed. Native
 window/taskbar appearance has not been visually checked.
 
+## Chrome download icon investigation (2026-11-14)
+
+Status: investigation and build safeguards complete; the affected existing
+Chrome session has not been retested after restart.
+
+- User reports the generic download icon in Google Chrome with v0.1.13.
+  Its ICO already has eight frames (16, 20, 24, 32, 40, 48, 64 and 256 px),
+  with bitmap small frames and a PNG 256 px frame. Increasing size is not
+  supported by the evidence.
+- The actual downloaded `H3Forge (1).exe` passes read-only Windows extraction
+  at 16-96 px. Chrome 157.0.8103.51 in an isolated headless profile also returns
+  the correct branded icon through `chrome://fileicon/` at 64 px. The rebuilt
+  EXE returns the same image. No user browser profile or downloaded file was
+  modified. Cached fallback state or a transient browser failure is plausible,
+  but the precise existing-session cause is unresolved.
+- Added explicit Cargo icon input tracking because the local release artifact
+  still contained the previous icon. Added
+  [verify-windows-icon.ps1](../../scripts/verify-windows-icon.ps1) and a CI gate
+  exercising Chromium's read-only image mapping, first-group enumeration and
+  `LoadImage` extraction path. It never executes the inspected EXE. This checks
+  Windows extraction, not the browser sandbox or session cache. Corrected the
+  verifier comment that previously attributed all browser failures to PNG.
+- Verification: TypeScript/Vite and locked native release build pass; portable
+  verification finds all eight exact icon frames, expected assets/imports and
+  a matching checksum. Windows extraction passes for the downloaded and rebuilt
+  EXEs. No release was published. Local rebuilt artifact SHA-256:
+  `cf94740602d2e864202e41cfbb49430ad73b832a0c035b0bdfd0eef89b47c876`.
+
+Reference: Chromium's
+[icon reader](https://raw.githubusercontent.com/chromium/chromium/main/chrome/services/util_win/util_read_icon.cc)
+and [image mapping](https://raw.githubusercontent.com/chromium/chromium/main/base/files/memory_mapped_file_win.cc).
+
 ## Workflow registration recovery (2026-11-12)
 
 GitHub reported workflow 414703120 as `deleted` despite the file being present

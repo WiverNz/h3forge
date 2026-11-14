@@ -71,6 +71,7 @@ with the `npm ci` command below before the first build or after lockfile changes
 npm.cmd --prefix web ci --cache .local/npm-cache
 .\scripts\build-portable.ps1
 node scripts/verify-portable.cjs
+.\scripts\verify-windows-icon.ps1
 Get-FileHash .local/release/H3Forge.exe -Algorithm SHA256
 ```
 
@@ -83,6 +84,13 @@ without embedding a development path. Ordinary source-change, backup and
 safe-replacement checks remain active.
 
 ## Running and recovery
+
+If Chrome's download history shows a generic EXE icon while Explorer shows
+H3Forge, fully exit and reopen Chrome, then check the download again. The
+downloaded v0.1.13 EXE was verified through Chrome's file-icon service in a
+fresh isolated profile. A larger icon is not required. A stale icon or a
+temporary extraction failure in an existing Chrome session remains possible;
+the existing-session cause has not been established.
 
 Install the Microsoft Edge WebView2 Evergreen Runtime before launching. The EXE
 does not download or bundle it; missing-runtime launch failure requires installing

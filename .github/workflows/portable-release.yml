@@ -40,7 +40,10 @@ jobs:
       - name: Build portable EXE and checksum
         run: ./scripts/build-portable.ps1
       - name: Inspect embedded frontend, icon and artifact boundaries
-        run: node scripts/verify-portable.cjs
+        run: |
+          node scripts/verify-portable.cjs
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./scripts/verify-windows-icon.ps1
       - name: Publish portable assets
         env:
           GH_TOKEN: ${{ github.token }}
