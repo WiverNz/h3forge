@@ -8,7 +8,8 @@ slot 3 = Cerberus (ID 47, 6880). This differs from the request's stated
 order. The binary mapping was already correct; incorrect portrait-number
 assumptions exchanged Gog/Magog artwork with Hell Hound/Cerberus artwork.
 Corrected the shared standard/HotA portrait lookup and made the shared army
-editor one left-to-right row, horizontally scrollable on narrow panels.
+editor one left-to-right row at that stage; the layout restoration below
+supersedes that presentation change.
 Heroes, town armies, garrisoned heroes and map garrisons use these shared
 paths. No parser, slot dispatch, save operation or creature/count value changed.
 
@@ -22,6 +23,19 @@ passed. A later user report confirms army composition changes in HotA;
 see the [manual checklist](../MANUAL_COMPATIBILITY.md). The report does not
 identify a save/build, so it does not certify this exact Xyron regression or
 the latest portrait/layout changes in the native window.
+
+## Compact layout restoration
+
+Status: completed. Restored the shared two-column army grid in row-first slot
+order (1/2, 3/4, 5/6, then 7), collapsing to one column in narrow panels.
+Icons, searchable selectors and quantities stay side by side without horizontal
+scrolling. Heroes, towns and map garrisons share this layout. Corrected portrait
+mappings, data order, edit dispatch and binary offsets are unchanged.
+
+Focused browser regression: 652 assertions and 70 quantity edits across regular
+and compact layouts at 280, 360, 560, 620 and 1200 px, including popup anchoring,
+no horizontal overflow, slot 7 placement and exact slot/creature/count requests.
+Focused army/selector tests and one frontend build passed. No Rust changes.
 
 ## Goal
 

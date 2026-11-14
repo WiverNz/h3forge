@@ -229,15 +229,16 @@ footer { padding: 5px 14px; gap: 8px; flex-wrap: wrap; font-size: 11px; }
 .general-group-title { grid-column: 1 / -1; border-bottom: 1px solid var(--border); padding-bottom: 4px; }
 .general-group-title dt { color: var(--gold); font-weight: 600; }
 /* Seven compact stack editors; creature choices are supplied by Rust. */
-.army-grid { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(160px, 1fr); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+/* At most two columns, collapsing to one without containing the fixed picker popup. */
+.army-grid { --army-gap: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, max(275px, calc((100% - var(--army-gap)) / 2))), 1fr)); gap: var(--army-gap); }
 .army-stack { min-width: 0; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--background); }
 .army-stack-dirty { border-color: var(--gold); }
 .army-stack-heading { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; }
 .army-stack label { display: flex; flex-direction: column; gap: 4px; color: var(--muted); font-size: 12px; min-width: 0; }
-.army-creature-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; align-items: end; min-width: 0; }
+.army-creature-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 76px; gap: 8px; align-items: end; min-width: 0; }
 .army-quantity-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .army-quantity-field .edit-number { width: 100%; height: 32px; }
-.army-creature-readonly { align-self: center; margin: 0; min-width: 0; }
+.army-creature-readonly { grid-column: 2 / -1; align-self: center; margin: 0; min-width: 0; }
 .creature-portrait { display: flex; justify-content: center; }
 .creature-portrait .portrait-small { width: 40px; height: 44px; }
 
@@ -503,10 +504,10 @@ footer { padding: 5px 14px; gap: 8px; flex-wrap: wrap; font-size: 11px; }
 .neutral-diagnostics summary { cursor: pointer; }
 .neutral-diagnostics h3 { font-size: 12px; }
 .neutral-editor { container-type: inline-size; }
-.army-grid.army-grid-compact { grid-auto-columns: minmax(140px, 1fr); gap: 8px; }
-.army-grid-compact .army-stack { display: flex; flex-direction: column; align-items: stretch; gap: 5px; padding: 3px 4px; border-radius: 3px; background: transparent; }
+.army-grid.army-grid-compact { --army-gap: 8px; gap: 4px var(--army-gap); }
+.army-grid-compact .army-stack { display: flex; align-items: center; gap: 5px; padding: 3px 4px; border-radius: 3px; background: transparent; }
 .army-grid-compact .army-stack-heading { flex: 0 0 14px; margin: 0; font-size: 10px; gap: 2px; color: var(--muted); }
-.army-grid-compact .army-creature-row { flex: 1; grid-template-columns: minmax(0, 1fr); gap: 5px; align-items: center; }
+.army-grid-compact .army-creature-row { flex: 1; grid-template-columns: minmax(0, 1fr) 80px; gap: 5px; align-items: center; }
 .army-grid-compact .army-creature-readonly { grid-column: 1 / -1; font-size: 12px; }
 .army-grid-compact .creature-combobox-trigger, .army-grid-compact .edit-number { height: 28px; min-height: 28px; border-radius: 3px; padding: 2px 5px; }
 .army-grid-compact .creature-option-icon, .army-grid-compact .creature-option-icon .portrait-small { width: 20px; height: 20px; flex-basis: 20px; }

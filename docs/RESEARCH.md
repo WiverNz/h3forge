@@ -26,8 +26,10 @@ frames establish the same exception for HotA's portrait-number-plus-two
 mapping. The earlier cross-container comparison was not independent proof
 of creature identity for these four frames. Corrected shared artwork lookup;
 see [resource specification](formats/GAME_RESOURCES_FORMAT.md#e-creature-portraits).
-The shared editor now presents a single horizontal slot row, scrolling on
-narrow panels, without permuting DTOs or edit indices. Army composition now has a user-reported HotA pass; the exact Xyron
+The shared editor's initial horizontal-row change was subsequently replaced
+with a compact two-column grid (single column in narrow panels), without
+horizontal scrolling or any permutation of DTOs or edit indices.
+Army composition now has a user-reported HotA pass; the exact Xyron
 fixture, slot-by-slot edits and new native layout were not identified in that report.
 
 Investigated 2026-11-08. This document distinguishes **observations**, **inferences**, and **unresolved work**. No builds, dependency installations, upstream test suites, application implementation, save writes, or archive writes were performed. Small standard-library Python probes were research tools only; H3Forge will not embed or require Python. They evaluated selected source constants without importing the wxPython application, decompressed the sample in memory, and read archive directories/selected entry headers. No game data was extracted to disk.
