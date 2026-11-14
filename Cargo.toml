@@ -11,7 +11,7 @@ default-members = ["crates/h3forge-save", "crates/h3forge-resources", "crates/h3
 [workspace.package]
 version = "0.1.13"
 edition = "2024"
-rust-version = "1.99.1"
+rust-version = "1.100.0"
 license = "MIT"
 publish = false
 

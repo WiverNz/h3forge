@@ -13,7 +13,7 @@ Use React + TypeScript + Vite with CSS design tokens and small accessible compon
 ```text
 Cargo.toml                      # resolver 3, edition 2024, shared dependencies
 Cargo.lock                      # committed; --locked in milestone checks
-rust-toolchain.toml              # channel 1.99.1; rustfmt, clippy; minimal profile
+rust-toolchain.toml              # channel 1.100.0; rustfmt, clippy; minimal profile
 crates/
   h3forge-save/
     src/{lib,error,container,detect,domain,definitions,locate,parse,edit,patch}.rs
@@ -43,7 +43,7 @@ Workspace members include all three Rust packages; `default-members` are the two
 
 ## Toolchain and Tauri 3 baseline
 
-Pin Rust `1.99.1` in M0. The following deliberately uses a known release snapshot rather than floating `next` tags. Different alpha numbers are expected.
+Pin Rust `1.100.0` in M0. The following deliberately uses a known release snapshot rather than floating `next` tags. Different alpha numbers are expected.
 
 | Direct package/tool | Proposed exact pin | Evidence / status |
 |---|---|---|

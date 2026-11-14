@@ -1,4 +1,4 @@
-# H3F-001 - Create the pinned Rust 1.99.1 and Tauri 3 Alpha foundation
+# H3F-001 - Create the pinned Rust 1.100.0 and Tauri 3 Alpha foundation
 
 Status: completed. Milestone: M0. Priority: P0. Updated: 2026-11-08.
 
@@ -8,7 +8,7 @@ Launch the smallest genuine Windows desktop shell with a typed Rust command roun
 
 ## Scope
 
-Create the two-library Cargo workspace and desktop member described in ARCHITECTURE.md. Add rust-toolchain.toml (1.99.1), exact direct dependencies and committed lockfiles. Resolve the researched v3 candidate set; review the resolved graph for Tauri 2 contamination. Configure Wry explicitly, React/TypeScript/Vite, CSS tokens and a typed invoke wrapper. Select a compatible Rust-owned native picker dependency. Document Windows/WebView2 and build-time Node requirements. Add MIT project license and THIRD_PARTY_NOTICES scaffolding. Keep private data out of resources.
+Create the two-library Cargo workspace and desktop member described in ARCHITECTURE.md. Add rust-toolchain.toml (1.100.0), exact direct dependencies and committed lockfiles. Resolve the researched v3 candidate set; review the resolved graph for Tauri 2 contamination. Configure Wry explicitly, React/TypeScript/Vite, CSS tokens and a typed invoke wrapper. Select a compatible Rust-owned native picker dependency. Document Windows/WebView2 and build-time Node requirements. Add MIT project license and THIRD_PARTY_NOTICES scaffolding. Keep private data out of resources.
 
 ## Relevant files or components
 

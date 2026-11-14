@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - name: Install pinned Rust
         run: |
-          rustup toolchain install 1.99.1 --profile minimal --target x86_64-pc-windows-msvc
+          rustup toolchain install 1.100.0 --profile minimal --target x86_64-pc-windows-msvc
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Validate tag and metadata
         run: |

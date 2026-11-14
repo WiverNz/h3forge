@@ -15,7 +15,7 @@ Status: portable release automation implemented and locally artifact-verified; f
   confirmation precedes the atomic origin push. `--dry-run` previews without
   mutations. No commit, tag, push or release was performed during implementation.
 - [portable-release.yml](../../.github/workflows/portable-release.yml) runs for pushed `v*`
-  tags on `windows-latest`, pins Rust 1.99.1 and Node 24.13.0, uses npm ci and
+  tags on `windows-latest`, pins Rust 1.100.0 and Node 24.13.0, uses npm ci and
   locked Cargo, checks versions against the tag, builds via the installed Tauri 3
   CLI with `--no-bundle`, and publishes only the EXE and SHA-256 checksum.
 - [build-portable.ps1](../../scripts/build-portable.ps1) produces the same local

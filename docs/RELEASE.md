@@ -2,7 +2,7 @@
 
 ## Maintainer commands
 
-From a clean checkout on a branch, with Git, Rust 1.99.1 and Node 24.13.0 installed:
+From a clean checkout on a branch, with Git, Rust 1.100.0 and Node 24.13.0 installed:
 
 ```powershell
 .\scripts\release.ps1 --push        # Bump patch, prepare release, confirm push

@@ -58,9 +58,9 @@ try {
     $major = '{0}.0.0' -f ([int]$parts[0] + 1)
     $cases = @(
         @{ arguments = @(); version = $patch; answers = @('y'); pushed = $false },
-        @{ arguments = @('--push'); version = $patch; answers = @('y', "push v$patch"); pushed = $true },
-        @{ arguments = @($minor, '--push'); version = $minor; answers = @('y', ''); pushed = $false },
-        @{ arguments = @('-Push', 'minor'); version = $minor; answers = @('y', "push v$minor"); pushed = $true }
+        @{ arguments = @('--push'); version = $patch; answers = @('Y'); pushed = $true },
+        @{ arguments = @($minor, '--push'); version = $minor; answers = @('y'); pushed = $true },
+        @{ arguments = @('-Push', 'minor'); version = $minor; answers = @('y'); pushed = $true }
     )
     foreach ($case in $cases) {
         Reset-Fixture
@@ -79,6 +79,7 @@ try {
             Assert-True (($pushes[0] -join ' ') -eq "push --atomic origin HEAD:refs/heads/fixture-branch refs/tags/v$($case.version)") 'Wrong push refs'
         }
         Assert-True ($global:H3ForgeReleaseTest.answers.Count -eq 0) 'Expected confirmation was not requested'
+        Assert-True ($global:H3ForgeReleaseTest.prompts.Count -eq 1) 'Expected exactly one confirmation'
     }
     foreach ($arguments in @(@('major', '--dry-run'), @('patch', '-n'), @('--push', '--dry-run'))) {
         Reset-Fixture
@@ -88,8 +89,9 @@ try {
     }
     Reset-Fixture
     $global:H3ForgeReleaseTest.answers = @('')
-    & "$fixture/scripts/release.ps1"
+    & "$fixture/scripts/release.ps1" --push
     Assert-True ((Get-Content "$fixture/Cargo.toml" -Raw) -ceq (Get-Content "$root/Cargo.toml" -Raw)) 'Cancellation changed metadata'
+    Assert-True (@($global:H3ForgeReleaseTest.calls | Where-Object { $_[0] -in 'add', 'commit', 'push' -or ($_[0] -eq 'tag' -and $_[1] -eq '-a') }).Count -eq 0) 'Cancellation mutated Git'
     foreach ($arguments in @(@('--unknown'), @('1.2.3', '2.0.0'), @('01.2.3'))) {
         Reset-Fixture
         $rejected = $false

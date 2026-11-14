@@ -42,7 +42,7 @@ Complete the assigned issue, update its status, and summarize the results. Do no
 
 These instructions apply throughout the entire project, not just the current task.
 
-- Required stack: Rust **1.99.1**, Tauri **3 Alpha**, React + TypeScript + Vite. M0 creates `rust-toolchain.toml` and lockfiles. Use the researched candidate versions in `docs/ARCHITECTURE.md`; validate their resolved graph once. Never silently substitute Tauri 2 or copy its runtime feature setup.
+- Required stack: Rust **1.100.0**, Tauri **3 Alpha**, React + TypeScript + Vite. M0 creates `rust-toolchain.toml` and lockfiles. Use the researched candidate versions in `docs/ARCHITECTURE.md`; validate their resolved graph once. Never silently substitute Tauri 2 or copy its runtime feature setup.
 - Keep parsing, editing, archive access, and image decoding in Rust. Core crates do not depend on Tauri. Frontend calls typed application commands; it receives no arbitrary file read/write API. No Python, Node, Delphi, or command-line sidecars at application runtime.
 - `games/` and `Data/` are private, copyrighted, read-only reference material. Never commit, package, modify, move, or delete either directory or its contents. Tests copy needed saves into ignored `.local/fixtures/` or an OS temporary directory; all test output stays there. Reference originals are never save destinations.
 - Do not modify `D:/Projects/FlightTrace`, `D:/Projects/h3sed_4.1`, or `D:/Projects/mmarch`. Reuse mmarch's relevant Rust code inside H3Forge with attribution; do not rewrite existing archive algorithms or import its CLI wholesale.

@@ -100,7 +100,7 @@ See the [current release notes](docs/RELEASE_NOTES.md) and [feature status](docs
 
 ## For developers
 
-H3Forge uses **Rust 1.99.1, Tauri 3 Alpha, React, TypeScript and Vite**. On Windows, install the MSVC C++ Build Tools, the pinned Rust toolchain, Node.js 24.13.0 and WebView2 Runtime. From the repository root:
+H3Forge uses **Rust 1.100.0, Tauri 3 Alpha, React, TypeScript and Vite**. On Windows, install the MSVC C++ Build Tools, the pinned Rust toolchain, Node.js 24.13.0 and WebView2 Runtime. From the repository root:
 
 ```powershell
 npm.cmd --prefix web ci --cache .local/npm-cache

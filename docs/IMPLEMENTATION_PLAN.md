@@ -6,7 +6,7 @@ Status updated 2026-11-14: M0-M2 implemented, including H3F-006. M3 and the H3F-
 
 | Milestone | Deliverable | Dependencies | Definition of done |
 |---|---|---|---|
-| M0 - foundation | Rust 1.99.1 workspace, pinned Tauri 3 Alpha/Wry shell, React/TS/Vite, typed command round trip, notices and focused development commands | None; H3F-001 | Windows app launches, one IPC call works, lockfiles show compatible v3 packages; no private game data in build resources |
+| M0 - foundation | Rust 1.100.0 workspace, pinned Tauri 3 Alpha/Wry shell, React/TS/Vite, typed command round trip, notices and focused development commands | None; H3F-001 | Windows app launches, one IPC call works, lockfiles show compatible v3 packages; no private game data in build resources |
 | M1 - read-only save browser | Strict gzip/content detection, sample profile, hero locator and readable/searchable overview | M0; H3F-002–003 | A copied sample opens with map/version and reproducible hero records; malformed input returns errors; no writing API exposed |
 | M2 - useful original artwork | Adapted Rust LOD reader, PCX portraits, installation selection and first DEF icons | M1; H3F-004–006 | A verified portrait and spell frame display from readable local archives; missing/unsupported assets use placeholders; no startup extraction |
 | M3 - first complete edit | Validated attributes/spells plus transactional persistence and full UI flow | M1; H3F-007–008; M2 enhances UI but asset gaps do not block editing | Copy of SaAndVla opens, actual hero selected, one learned spell changed, backup/output verified, unrelated payload bytes unchanged, saved copy reopens and loads in matching game |

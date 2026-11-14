@@ -5,7 +5,7 @@ Build setup, dependency pins and historical foundation verification. For downloa
 ## Development requirements
 
 - Windows 10/11 x64, Visual Studio Build Tools with Desktop development with C++, MSVC and Windows SDK.
-- Rustup with Rust **1.99.1**, pinned by `rust-toolchain.toml`.
+- Rustup with Rust **1.100.0**, pinned by `rust-toolchain.toml`.
 - Node **20.19+ in the 20.x line, or 22.12+**, and npm. This session used Node 24.13.0 / npm 11.21.2.
 - Microsoft Edge WebView2 Runtime. Node, npm and Rust are build-time tools; the desktop app has no Python, Delphi, mmarch or Node sidecar.
 
@@ -54,7 +54,7 @@ When intentionally changing the dependency set, inspect `cargo tree --workspace 
 
 | Component | Version |
 |---|---|
-| Rust | 1.99.1 |
+| Rust | 1.100.0 |
 | tauri / tauri-runtime-wry | 3.0.0-alpha.5 / 3.0.0-alpha.5 |
 | tauri-build | 3.0.0-alpha.4 |
 | tauri-runtime (explicit compatibility constraint) | 3.0.0-alpha.4 |
@@ -81,6 +81,9 @@ Only the local main window receives the enumerated application command permissio
 `games/`, `Data/` and `Maps/` remain ignored, private and untouched. Never package them. The application uses the PNG/ICO derived from the root `icon.png` under `src-tauri/icons/`. Adapted-code notices are embedded in the portable frontend. See [third-party notices](../THIRD_PARTY_NOTICES.md).
 
 ## Verification recorded for H3F-001
+
+Current compiler migration results and fixture limitations are recorded in
+[H3F-031](issues/031-rust-1.100.md). The following M0 results are historical.
 
 Passed agent checks: Rust 1.99.1 selection, formatting, workspace metadata, configuration paths, capability scope, resource exclusions and ignore rules. The resolved Cargo lockfile contains the expected v3 alpha set and no Tauri 2 packages.
 

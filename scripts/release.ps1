@@ -76,10 +76,7 @@ try {
     Write-Host "To push this prepared release manually: $pushCommand"
     if ($push) {
         Write-Host "Pushing $branch and $tag to $origin will BUILD AND PUBLISH a GitHub Release."
-        $answer = Read-Host "Type 'push $tag' to confirm, or press Enter to keep everything local"
-        if ($answer -ceq "push $tag") {
-            Invoke-Checked git @('push', '--atomic', 'origin', "HEAD:refs/heads/$branch", "refs/tags/$tag")
-        } else { Write-Host 'Nothing pushed. The release commit and tag remain local.' }
+        Invoke-Checked git @('push', '--atomic', 'origin', "HEAD:refs/heads/$branch", "refs/tags/$tag")
     } else {
         Write-Host 'No --push supplied. The release commit and tag remain local.'
     }
